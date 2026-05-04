@@ -24,7 +24,7 @@ export async function FillOverview({
   //   ?.split(":")[1] || "monthly"; // ถ้าเจอ ให้เอาค่าหลัง : ถ้าไม่เจอให้ใช้ "monthly"
   
   // ดึงข้อมูล
-  const rawData = await getFillOverviewData(timeFrame);
+  const rawData = await getFillOverviewData(timeFrame,"fill");
 
   // Fallback Data: ถ้า rawData เป็น null หรือไม่มี properties ที่ต้องการ ให้ใช้ค่าเริ่มต้น
   const data = {
