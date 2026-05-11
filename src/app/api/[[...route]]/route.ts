@@ -27,7 +27,13 @@ import {
    
 }  from '@/controller/acid.js';
 
-import {CardOverview, chartFillOverview, chartStoreOverview ,chartUsedOverview} from '@/controller/overview.js';
+import {
+  CardOverview, 
+  chartFillOverview, 
+  chartStoreOverview ,
+  chartUsedOverview,
+  reprotoverview
+} from '@/controller/overview.js';
 // import { a } from 'framer-motion/dist/types.d-DsEeKk6G';
 
 // export const runtime = 'edge'
@@ -58,12 +64,10 @@ app.get('/wgcacak', async (c) => {
   return c.json(result.recordset[0]);
 });
 
-
 app.get('/cardoverview', CardOverview);
 app.get('/chartfilloverview', chartFillOverview); 
 app.get('/chartstoreoverview', chartStoreOverview); 
 app.get('/chartusedoverview', chartUsedOverview); 
-
 
 // app.get('/metrics', async (c) => {
 //   const pool = await getPool();
@@ -72,13 +76,14 @@ app.get('/chartusedoverview', chartUsedOverview);
 // });
 
 // app.get('/tank1', )
-app.get ('/reportall', reportall);
-app.get ('/reportnaohrecieved', reportnaohrecieved);
+// app.get ('/reportall', reportall);
+// app.get ('/reportnaohrecieved', reportnaohrecieved);
 
 app.get('/alkalirecieved', alkalirecieved);
 app.get('/alkalimixed', alkalimixed);
 app.get('/alkaliconsumed', alkaliconsumed);
 
+app.get('/reportoverview', reprotoverview);
 
 app.get('/reportnaohrecieved', reportnaohrecieved);
 app.get('/reportnaohmixed', reportnaohmixed);
@@ -88,11 +93,9 @@ app.get('/reporthcirecieved', reporthcirecieved);
 app.get('/reporthcimixed', reporthcimixed);
 app.get('/reporthciused', reporthciconsumed);
 
-
 app.get('/acidrecieved', acidrecieved);
 app.get('/acidmixed', acidmixed);
 app.get('/acidconsumed', acidconsumed);
-
 
 // app.get('/alkalirecieved', async (c) => {
 
@@ -107,6 +110,5 @@ app.get('/acidconsumed', acidconsumed);
 //   return c.json(result.recordset);
 
 // });
-
 
 export const GET = handle(app)

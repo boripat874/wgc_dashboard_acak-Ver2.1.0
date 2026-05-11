@@ -5,6 +5,7 @@ import knex from 'knex';
 import { format } from 'date-fns';
 import { select } from '@heroui/react';
 import { NaOH } from '@/app/(home)/_components/overview-cards/icons';
+import { resolve } from 'path';
 
 const db = knex(knexfile.development);
 
@@ -1044,3 +1045,442 @@ export const chartUsedOverview = async (c) => {
         // reject(error);
     // }
 };
+
+export const reprotoverview = async (c) => {
+
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timed out")), timeout);
+    });
+
+    const reportoverviewDataLogic = new Promise(async (resolve, reject) => {
+
+        const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp
+
+        const data_NaOH_ = await db('ScadaDataLogAlkaline')
+            .select('*')
+            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            .orderBy('UnixTimestamp', 'asc');
+
+        // console.log("data_NaOH_ >>:", data_NaOH_);
+
+        const data_HCI_ = await db('ScadaDataLogAcid')
+        .select('*')
+        .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+        .where('UnixTimestamp', '<', timestamp.endTimestamp)
+        .orderBy('UnixTimestamp', 'asc');
+
+        // 1. สร้าง Array ของ Promises จากการ Map ข้อมูล
+        const naoh_promises = await Promise.all(data_NaOH_.map(async (item) => {
+
+            const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
+
+            // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+            const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
+            prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+            prevStart.setHours(0, 0, 0, 0);
+
+            // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+            const prevEnd = new Date(baseDate);
+            prevEnd.setHours(0, 0, 0, 0);
+
+            // แปลงเป็น Seconds (Unix Timestamp)
+            const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+            const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+            // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
+            const rows = await db('ScadaDataLogAlkaline')
+                .select("*")
+                .where('UnixTimestamp', '>=', prevStartSec)
+                .where('UnixTimestamp', '<=', prevEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+
+            if (rows) {
+
+                // console.log("rows >>:", rows);
+
+                const System_Data_Fill = item.Fill_Kg_N || 0;
+                const System_Data_Density = item.Density_N || 1;
+                const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
+                const System_Data_Density_lastday = rows.Density_N || 1;
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                // col A
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8);
+                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8);
+                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+                const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101N || 0;
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8);
+                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+                const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102N || 0;
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8);
+                // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+    
+                // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+                // col C
+                item.density_N = System_Data_Density;
+
+                
+                // col D
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill) * 1000;
+                item.data_remaining_fill_N = data_remaining_fill;
+
+                // col E
+                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+                item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday) * 1000;
+                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+                // col F
+                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+                item.Fill_between_day_N = Fill_between_day;
+
+                // col G
+                item.data_Fill_N =  System_Data_Fill;
+
+                
+                // col H
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+                item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+                // col I
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+                item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+                const Total_ALL_FT_101_lastday = (rows.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_201_lastday = (rows.Aka_Total_ALL_FT_201N || 0);
+
+                // col J
+                item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+                // col K
+                item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+
+                // col M
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+
+                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301 || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+
+                // col O
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+
+                const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                // col Q (PD1)
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
+                
+                item.Total_ALL_FT_401_N = Total_ALL_FT_401;
+                
+                // col Q (PD2)
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+
+                item.Total_ALL_FT_402_N = Total_ALL_FT_402;
+
+                // col Q (PD3)
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+
+                item.Total_ALL_FT_403_N = Total_ALL_FT_403;
+
+                // col R (PD1)
+                const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401N || 0);
+                const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
+                item.pd1_between_day_N = pd1_between_day;
+                
+                // col R (PD2)
+                const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402N || 0);
+                const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+                item.pd2_between_day_N = pd2_between_day;
+
+                // col R (PD3)
+                const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403N || 0);
+                const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+                item.pd3_between_day_N = pd3_between_day;
+
+                // col S
+                item.total_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+                // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
+                return {
+                    ...item,
+                };
+            }
+
+            return null;
+        }))
+
+        const hci_promises = await Promise.all(data_HCI_.map(async (item) => {
+
+            const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
+
+            // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+            const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
+            prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+            prevStart.setHours(0, 0, 0, 0);
+
+            // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+            const prevEnd = new Date(baseDate);
+            prevEnd.setHours(0, 0, 0, 0);
+
+            // แปลงเป็น Seconds (Unix Timestamp)
+            const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+            const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+            // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
+            const rows = await db('ScadaDataLogAlkaline')
+                .select("*")
+                .where('UnixTimestamp', '>=', prevStartSec)
+                .where('UnixTimestamp', '<=', prevEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+
+            if (rows) {
+
+                // console.log("rows >>:", rows);
+
+                const System_Data_Fill = item.Fill_Kg_H || 0;
+                const System_Data_Density = item.Density_H || 1;
+                const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
+                const System_Data_Density_lastday = rows.Density_H || 1;
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                // col A
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8);
+                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8);
+                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+                const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8);
+                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+                const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8);
+                // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+    
+                // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+                // col C
+                item.density_H = System_Data_Density;
+
+                // col D
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill) * 1000;
+                item.data_remaining_fill_H = data_remaining_fill;
+
+                // col E
+                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+                item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday) * 1000;
+                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+                // col F
+                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+                item.Fill_between_day_H = Fill_between_day;
+
+                // col G
+                item.data_Fill_H =  System_Data_Fill;
+                
+                // col H
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+                item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+                // col I
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+                item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+                const Total_ALL_FT_101_lastday = (rows.Aka_Total_ALL_FT_101H || 0);
+                const Total_ALL_FT_201_lastday = (rows.Aka_Total_ALL_FT_201H || 0);
+
+                // col J
+                item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+                // col K
+                item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+
+                // col M
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+
+                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301H || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+                item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+
+                // col O
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+
+                const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401H || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                // col Q (PD1)
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+                
+                item.Total_ALL_FT_401_H = Total_ALL_FT_401;
+                
+                // col Q (PD2)
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+
+                item.Total_ALL_FT_402_H = Total_ALL_FT_402;
+
+                // col Q (PD3)
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+
+                item.Total_ALL_FT_403_H = Total_ALL_FT_403;
+
+                // col Q (PD3)
+                const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
+
+                item.Total_ALL_FT_501_H = Total_ALL_FT_501;
+
+                // col R (PD1)
+                const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401H || 0);
+                const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
+
+                item.pd1_between_day_H = pd1_between_day;
+                
+                // col R (PD2)
+                const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402H || 0);
+                const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+
+                item.pd2_between_day_H = pd2_between_day;
+
+                // col R (PD3)
+                const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403H || 0);
+                const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+                item.pd3_between_day_H = pd3_between_day;
+
+                // col R (ES)
+                const Total_ALL_FT_501_lastday = (rows.Aka_Total_ALL_FT_403H || 0);
+                const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
+                item.es_between_day_H = es_between_day;
+
+                // col S
+                item.total_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+                item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
+
+
+                // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
+                return {
+                    ...item,
+                };
+            }
+
+            return null;
+        }))
+
+        // 1. รอให้ Promises ทั้งหมดทำงานเสร็จสิ้น และกรองค่าที่เป็น null ออก
+        const naoh_results = naoh_promises.filter(Boolean);
+        const hci_results = hci_promises.filter(Boolean);
+
+        // 2. ใช้ Object หรือ Map ในการรวมข้อมูลโดยใช้ dateTime เป็น Key
+        const mergedMap = {};
+
+        // จัดการข้อมูลจากฝั่ง NaOH
+        naoh_results.forEach(item => {
+            const date = item.dateTime;
+            if (!mergedMap[date]) {
+                mergedMap[date] = { dateTime: date };
+            }
+            // รวม Property ทั้งหมดของ NaOH เข้าไป
+            Object.assign(mergedMap[date], item);
+        });
+
+        // จัดการข้อมูลจากฝั่ง HCI
+        hci_results.forEach(item => {
+            const date = item.dateTime;
+            if (!mergedMap[date]) {
+                mergedMap[date] = { dateTime: date };
+            }
+            // รวม Property ทั้งหมดของ HCI เข้าไป
+            Object.assign(mergedMap[date], item);
+        });
+
+        // 3. แปลง Map กลับเป็น Array และจัดการ Default Value (0) สำหรับฟิลด์ที่หายไป
+        const final_results = Object.values(mergedMap).map(item => {
+            // รายการ Field ทั้งหมดที่คุณต้องการตรวจสอบ (ตัวอย่าง)
+            const fieldsToCheck = [
+                'density_N', 'data_remaining_fill_N', 'data_remaining_fill_total_N', 'Fill_between_day_N','data_Fill_N',
+                'Total_ALL_FT_101_N', 'Total_ALL_FT_201_N', 'chemical_between_day_N', 'ro_between_day_N', 'tank_Mix_between_day_N',
+                'tank_Store_between_day_N', 'Total_ALL_FT_401_N', 'Total_ALL_FT_402_N', 'Total_ALL_FT_403_N', 'pd1_between_day_N',
+                'pd2_between_day_N', 'pd3_between_day_N', 'total_use_between_day_N',
+                'density_H', 'data_remaining_fill_H', 'data_remaining_fill_total_H', 'Fill_between_day_H', 'data_Fill_H',
+                'Total_ALL_FT_101_H', 'Total_ALL_FT_201_H', 'chemical_between_day_H', 'ro_between_day_H', 'tank_Mix_between_day_H',
+                'tank_Store_between_day_H', 'Total_ALL_FT_401_H', 'Total_ALL_FT_402_H', 'Total_ALL_FT_403_H', 'pd1_between_day_H',
+                'pd2_between_day_H', 'pd3_between_day_H', 'total_use_between_day_H',
+            ];
+
+            fieldsToCheck.forEach(field => {
+                if (item[field] === undefined || item[field] === null) {
+                    item[field] = 0;
+                }
+            });
+
+            return item;
+        });
+
+        // const final_items = promises_.filter(item => item !== null);
+        return resolve({ 
+
+            start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
+            end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+            total: final_results.length,
+            result: final_results 
+            // message: 'Hello, Smart Automation Thailand!',
+        });
+
+    })
+
+    try {
+
+        const result = await Promise.race([reportoverviewDataLogic, timeoutPromise]);
+
+        return c.json(result);
+
+    } catch (error){
+
+        if (error instanceof Error && error.message === "Request timed out") {
+            // ส่ง status 402 หรือตามที่ต้องการกลับไป
+            return c.json({ message: "Request timed out" }, 402);
+            } else {
+            // จัดการกับ error อื่นๆ
+            console.error("An unexpected error occurred:", error);
+            return c.json({ message: "Internal Server Error" }, 500);
+        }
+    }
+}
