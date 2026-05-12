@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { DateRangePicker } from "@heroui/react"; // ตรวจสอบว่าลง package นี้แล้ว
+import { DateRangePicker } from "@heroui/date-picker"; // ตรวจสอบว่าลง package นี้แล้ว
 import { parseDate } from "@internationalized/date";
 import type { DateValue, RangeValue } from "@heroui/react";
 import { addDays, subDays, startOfMonth, startOfYear, format, subMonths } from 'date-fns';
@@ -119,12 +119,15 @@ const SectionChooseDate: React.FC<SectionChooseDate> = ({
             <DateRangePicker 
               aria-label="Duration"
               disableAnimation={true}
-              value={getSafeValue()}
+              value={getSafeValue() as any}
               onChange={(val) => {
                 // เช็คความปลอดภัยเผื่อค่าที่ส่งกลับมาเป็น null
                 if (val && val.start && val.end) {
-                  onChangeDate_start(val.start.toString());
-                  onChangeDate_end(val.end.toString());
+                  // onChangeDate_start((val.start as any).toString());
+                  // onChangeDate_end((val.end as any).toString());
+                  onChangeDate_start(String(val.start));
+                  onChangeDate_end(String(val.end));
+
                 }
               }}
               className="w-full p-0 bg-white dark:bg-gray-dark border border-gray-300 dark:border-gray-600 rounded text-sm"

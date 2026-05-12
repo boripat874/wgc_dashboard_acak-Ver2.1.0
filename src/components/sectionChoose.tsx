@@ -196,8 +196,8 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
                         disableAnimation={true}
                         
                         value={{
-                            start: parseDate(date_start), 
-                            end: parseDate(date_end)
+                            start: parseDate(date_start) as any, 
+                            end: parseDate(date_end) as any
                         }}
                         onChange={(val) => {
                             if (val) {

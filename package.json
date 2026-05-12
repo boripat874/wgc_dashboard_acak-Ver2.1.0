@@ -1,8 +1,9 @@
 {
   "name": "free-nextadmin-nextjs",
   "version": "1.2.3",
+  "type": "module",
   "private": true,
- "scripts": {
+  "scripts": {
     "dev": "next dev -p 80",
     "build": "next build ",
     "start": "next start -p 80",
@@ -10,7 +11,7 @@
   },
   "dependencies": {
     "@heroui/button": "^2.2.32",
-    "@heroui/date-picker": "^2.3.26",
+    "@heroui/date-picker": "^2.3.33",
     "@heroui/react": "^2.8.10",
     "@heroui/styles": "^3.0.1",
     "@hono/node-server": "^1.19.12",

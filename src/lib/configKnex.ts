@@ -1,4 +1,5 @@
-module.exports = {
+// module.exports = {
+const config = {
   development: {
     client: 'mssql',
     connection: {
@@ -25,3 +26,5 @@ module.exports = {
   },
   // Add other environments here (staging, production)
 };
+
+export default config;

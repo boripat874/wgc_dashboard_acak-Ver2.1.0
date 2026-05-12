@@ -1,4 +1,4 @@
-exports.convertTotimestamp = async function name(params) {
+export async function convertTotimestamp(params) {
 
     let period = params.period || "today"; // ค่าที่เป็นไปได้: "today", "thisweek", "thismonth", "thisyear" , "bydate"
 
