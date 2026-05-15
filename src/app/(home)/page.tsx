@@ -44,6 +44,7 @@ export default async function Home({ searchParams }: PropsType) {
           key={extractTimeFrame("fill_overview")}
           timeFrame={extractTimeFrame("fill_overview")?.split(":")[1]}
           department="fill"
+          fixedDate={2}
         />
 
         <LineOverview
@@ -51,6 +52,7 @@ export default async function Home({ searchParams }: PropsType) {
           key={extractTimeFrame("store_overview")}
           timeFrame={extractTimeFrame("store_overview")?.split(":")[1]}
           department="store"
+          fixedDate={2}
         />
 
         <LineOverview
@@ -58,6 +60,7 @@ export default async function Home({ searchParams }: PropsType) {
           key={extractTimeFrame("used_overview")}
           timeFrame={extractTimeFrame("used_overview")?.split(":")[1]}
           department="used"
+          fixedDate={2}
         />
 
         {/* <TransferOverview

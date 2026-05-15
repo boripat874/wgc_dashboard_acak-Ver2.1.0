@@ -19,30 +19,13 @@ applyPlugin(jsPDF);
 
 // import CustomLegendProps from '@/components/reportPdf/legendcustent';
 
-interface report{
-  ordernumber: string;
-  receiptnumber: string;
-  paymentType : number;
-  receiptcash: number;
-  receiptchange: number;
-  receiptdiscount: number;
-  totalprice: number;
-  create_at: string;
-  orderid: string;
-}
-
 interface Data {
-  date_time: string;
-  start_time: string;
-  end_time: string;
-  Before_Fill: number;
-  After_Fill: number;
-  Error_Fill: number;
-  result_Before_Fill: number;
-  result_After_Fill: number;
-  result_Error_Fill: number;
-  System_Data_Fill: number;
-  System_Data_Density: number;
+  dateTime: string;
+  density: number;
+  data_remaining_fill: number;
+  data_remaining_fill_total: number;
+  Fill_between_day: number;
+  data_Fill: number;
 }
 
 // Sample data for the chart
@@ -73,17 +56,12 @@ async function convertToCSV(
     const unit_value = await Unit(UnitName_);
 
     const HEADERS: { [key in keyof Data]: string } = {
-        date_time: 'Date',
-        start_time: 'Time start',
-        end_time: 'Time stop',
-        Before_Fill: `Before Fill (${UnitName_})`,
-        After_Fill: `After Fill (${UnitName_})`,
-        Error_Fill: `Error Fill (${UnitName_})`,
-        result_Before_Fill: `Before Fill (${UnitName_})`,
-        result_After_Fill: `After Fill (${UnitName_})`,
-        result_Error_Fill: `Error Fill (${UnitName_})`,
-        System_Data_Fill: `System Data Fill (${UnitName_})`,
-        System_Data_Density: 'System Data Density'
+        dateTime: 'วันที่',
+        density: 'Density',
+        data_remaining_fill: 'คงเหลือ Tank เข้มข้น (L)',
+        data_remaining_fill_total: `คงเหลือเข้มข้นรวมสูตร kg)`,
+        Fill_between_day: `ผลต่างเข้มข้นใน Tank ระหว่างวัน (kg)`,
+        data_Fill: `รับเข้าใหม่ (kg)`
     };
  
     if (data.length === 0) {
@@ -105,7 +83,7 @@ async function convertToCSV(
     );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_},tank_ : ${tank_},Aggregation : ${aggregation_},Unit : ${unit_value},Period : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
+    return [`${reportName_}\nPeriod : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -116,7 +94,7 @@ const convertedData = (originalData: Data[]) => {
 
         i++;
 
-        const originalDate = item.date_time; // เช่น: '2025-01-20'
+        const originalDate = item.dateTime; // เช่น: '2025-01-20'
         
         // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
         const newDate = originalDate.replace(/-/g, '/'); 
@@ -124,17 +102,12 @@ const convertedData = (originalData: Data[]) => {
         // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
         // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
         return {  
-            date_time: newDate ,
-            start_time: item.start_time,
-            end_time: item.end_time,
-            Before_Fill: Number(item.Before_Fill),
-            After_Fill: Number(item.After_Fill),
-            Error_Fill: Number(item.Error_Fill),
-            result_Before_Fill: Number(item.result_Before_Fill),
-            result_After_Fill: Number(item.result_After_Fill),
-            result_Error_Fill: Number(item.result_Error_Fill),
-            System_Data_Fill: Number(item.System_Data_Fill),
-            System_Data_Density: Number(item.System_Data_Density)
+            dateTime: newDate,
+            density: Number(item.density),
+            data_remaining_fill: Number(item.data_remaining_fill),
+            data_remaining_fill_total: Number(item.data_remaining_fill_total),
+            Fill_between_day: Number(item.Fill_between_day),
+            data_Fill: Number(item.data_Fill)
         };
     });
 };
@@ -184,9 +157,9 @@ export default async function Forms1csv(
         // return;
     });
 
-    if(tank === "12"){
-        tank = "1+2";
-    }
+    // if(tank === "12"){
+    //     tank = "1+2";
+    // }
 
     // console.log("aggregation", aggregation);
 
@@ -213,7 +186,7 @@ export default async function Forms1csv(
 
         const today = format(new Date(), 'yyyy-MM-dd');
 
-        const filename: string = `Report Fill ${plantName_} ${today} .csv`;
+        const filename: string = `Report Fill ${plantName_}.csv`;
 
         const csvString = await convertToCSV(
             datatable, 
@@ -227,7 +200,8 @@ export default async function Forms1csv(
         );
     
         // Create a Blob from the CSV string
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM+csvString], { type: 'text/csv;charset=utf-8;' });
         
         // Create a temporary link element
         const link = document.createElement('a');

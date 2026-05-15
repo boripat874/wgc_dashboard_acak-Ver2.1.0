@@ -4,8 +4,8 @@ import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import SectionChoose from '@/components/sectionChoose';
 
-import Forms1 from '@/components/reports/reportPdf/forms1'; // Received
-import Forms1csv from '@/components/reports/reprotCSV/form1csv'; // Received
+import Forms0 from '@/components/reports/reportPdf/forms0'; // Received
+import Forms0csv from '@/components/reports/reprotCSV/form0csv'; // Received
 import { ReportFillOverview } from "@/components/Charts/report-fill-overview";
 import { ReportTransferOverview } from "@/components/Charts/report-transfer-overview";
 import { Suspense } from "react";
@@ -31,17 +31,16 @@ export default function Page() {
             const timer = setTimeout(() => {
 
                 // Forms1(renderReport, "Alkaline", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
-                Forms1(renderReport, "Alkaline", "kg", "12", "perday", "1day", format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd'))
+                Forms0(renderReport, "Overview", "kg", "-", "perday", "1day", format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd'))
                 
             }, 1000); // ปิดหลังจาก 1 วินาที
 
             return () => clearTimeout(timer);
         }
-
         
-        if (alkRecTank !== "--" && alkRecUnit !== "--" && alkRecAgg !== "--" && alkRecPeriod !== "--") {
-            console.log("Tank:", alkRecTank, "Unit:", alkRecUnit, "Agg:", alkRecAgg, "Period:", alkRecPeriod, "Start:", alkRecStart, "End:", alkRecEnd);
-            Forms1(renderReport, "Alkaline", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
+        if (alkRecPeriod !== "--") {
+            // console.log("Tank:", alkRecTank, "Unit:", alkRecUnit, "Agg:", alkRecAgg, "Period:", alkRecPeriod, "Start:", alkRecStart, "End:", alkRecEnd);
+            Forms0(renderReport, "Overview", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
         }
 
     }, [alkRecTank, alkRecUnit, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd]);
@@ -76,16 +75,16 @@ export default function Page() {
                 <h1>Report Overview</h1>
 
                 <SectionChoose 
-                    plantName="Alkaline" sectionName="Received" title="Overview"
+                    plantName="Overview" sectionName="Overview" title="Overview"
                     tank={alkRecTank} unit={alkRecUnit} aggregation={alkRecAgg} period={alkRecPeriod} date_start={alkRecStart} date_end={alkRecEnd}
                     onChangeTank={setAlkRecTank} onChangeUnit={setAlkRecUnit} onChangeAggregation={setAlkRecAgg} onChangePeriod={setAlkRecPeriod} onChangeDate_start={setAlkRecStart} onChangeDate_end={setAlkRecEnd}
                     onClickPDF={() => downloadReport(pdfUrl || '')}
-                    onClickCSV={() => Forms1csv("Alkaline", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)}
+                    onClickCSV={() => Forms0csv("Overview", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)}
                 />  
                 {/* Add your report content here */}
             </div>
 
-            <div className=" mt-3 grid xl:grid-cols-3 2xl:gap-7.5">
+            <div className="mt-3 2xl:gap-7.5">
 
                 {/* <div className="grid gap-y-3">
 
@@ -105,7 +104,7 @@ export default function Page() {
 
                 <Suspense fallback={<OverviewCardsSkeleton />}>
                     
-                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-800px xl:h-auto rounded-lg p-2">
+                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-[900px] rounded-lg p-2">
 
                         {/* เช็ค pdfUrl ตรงนี้ */}
                         {pdfUrl ? (

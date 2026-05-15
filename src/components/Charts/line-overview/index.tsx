@@ -13,12 +13,14 @@ type PropsType = {
   timeFrame?: string;
   className?: string;
   department?: string;
+  fixedDate?: number;
 };
 
 export async function LineOverview({
   timeFrame = "monthly",
   className,
-  department = "fill"
+  department = "fill",
+  fixedDate = 3
 }: PropsType) {
   // const actualTimeFrame = timeFrame
   //   .split(",") // แยกส่วนประกอบ [ "fill_overview:daily", "transfer_overview:daily" ]
@@ -68,7 +70,7 @@ export async function LineOverview({
           {title}
         </h2>
  
-        <PeriodPicker defaultValue={timeFrame} sectionKey={sectionkey} />
+        <PeriodPicker defaultValue={timeFrame} sectionKey={sectionkey} fixedDate={fixedDate} />
       </div>
 
       <FillOverviewChart data={data} />

@@ -20,34 +20,29 @@ applyPlugin(jsPDF);
 
 // import CustomLegendProps from '@/components/reportPdf/legendcustent';
 
-interface report{
-  ordernumber: string;
-  receiptnumber: string;
-  paymentType : number;
-  receiptcash: number;
-  receiptchange: number;
-  receiptdiscount: number;
-  totalprice: number;
-  create_at: string;
-  orderid: string;
-}
-
 interface Data {
 
-  date_time: string;
-  remaining_tank3?: number;
-  remaining_tank4?: number;
-  total_use?: number;
-  error?: number;
-  pd1_total?: number;
-  pd1_value?: number;
-  pd1_ro?: number;
-  pd2_total?: number;
-  pd2_value?: number;
-  pd2_ro?: number;
-  pd3_total?: number;
-  pd3_value?: number;
-  pd3_ro?: number;
+  dateTime: string;
+  data_remaining_tank_Mix: number;
+  data_remaining_tank_Mix_chemical: number;
+  data_remaining_tank_Mix_ro: number;
+  tank_Mix_between_day: number;
+  data_remaining_tank_Store: number;
+  data_remaining_tank_Store_chemical: number;
+  data_remaining_tank_Store_ro: number;
+  tank_Store_between_day: number;
+  Total_ALL_FT_401: number;
+  Total_ALL_FT_401_chemical: number;
+  Total_ALL_FT_401_ro: number;
+  Total_ALL_FT_402: number;
+  Total_ALL_FT_402_chemical: number;
+  Total_ALL_FT_402_ro: number;
+  Total_ALL_FT_403: number;
+  Total_ALL_FT_403_chemical: number;
+  Total_ALL_FT_403_ro: number;
+  Total_ALL_Used: number;
+  Total_ALL_Used_chemical: number;
+  Total_ALL_Used_ro: number;
 
 }
 
@@ -78,22 +73,41 @@ function convertToCSV(
         }
     });
 
+    var C1 = 4;
+    var C2 = 50;
+
+    if(plantName_ === "NaOH"){
+        C1 = 4;
+        C2 = 50;
+    }else if(plantName_ === "HCl"){
+        C1 = 6;
+        C2 = 35;
+
+    }
+
     const HEADERS: { [key in keyof Data]: string } = {
 
-        date_time: "Date",
-        remaining_tank3: `Remaining Tank 3 (${UnitName_})`,
-        remaining_tank4: `Remaining Tank 4 (${UnitName_})`,
-        total_use: `Total Use (${UnitName_})`,
-        error: `Error (${UnitName_})`,
-        pd1_total: `PD1 ${plantName_} Total (${UnitName_})`,
-        pd1_value: `PD1 ${plantName_} (${UnitName_})`,
-        pd1_ro: `PD1 RO (${UnitName_})`,
-        pd2_total: `PD2 ${plantName_} Total (${UnitName_})`,
-        pd2_value: `PD2 ${plantName_} (${UnitName_})`,
-        pd2_ro: `PD2 RO (${UnitName_})`,
-        pd3_total: `PD3 ${plantName_} Total (${UnitName_})`,
-        pd3_value: `PD3 ${plantName_} (${UnitName_})`,
-        pd3_ro: `PD3 RO (${UnitName_})`,
+        dateTime: "วันที่",
+        data_remaining_tank_Mix: `คงเหลือ Tank Mix Total (${C1}%) (L)`,
+        data_remaining_tank_Mix_chemical: `คงเหลือ Tank Mix ${plantName_} (${C2}%) (L)`,
+        data_remaining_tank_Mix_ro: `คงเหลือ Tank Mix RO (L)`,
+        tank_Mix_between_day: `ผลต่างใน Tank Mix ระหว่างวัน ${C1} (L)`,
+        data_remaining_tank_Store: `คงเหลือ Tank Store (${C1}%) (L)`,
+        data_remaining_tank_Store_chemical: `คงเหลือ Tank Store ${plantName_} (${C2}%) (L)`,
+        data_remaining_tank_Store_ro: `คงเหลือ Tank Store RO (L)`,
+        tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน ${C1} (L)`,
+        Total_ALL_FT_401: `ผลต่างมิเตอร์ระหว่างวัน PD1 (${C1}%) (L)`,
+        Total_ALL_FT_401_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD1 ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_401_ro: `ผลต่างมิเตอร์ระหว่างวัน PD1 RO (L)`,
+        Total_ALL_FT_402: `ผลต่างมิเตอร์ระหว่างวัน PD2 (${C1}%) (L)`,
+        Total_ALL_FT_402_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD2 ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_402_ro: `ผลต่างมิเตอร์ระหว่างวัน PD2 RO (L)`,
+        Total_ALL_FT_403: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_403_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_403_ro: `ผลต่างมิเตอร์ระหว่างวัน PD3 RO (L)`,
+        Total_ALL_Used: `Uesd total (${C1}%) (L)`,
+        Total_ALL_Used_chemical: `Uesd total ${plantName_} (${C2}%) (L)`,
+        Total_ALL_Used_ro: `Uesd total RO (L)`
         
     };
 
@@ -115,7 +129,7 @@ function convertToCSV(
     );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_},Aggregation : ${aggregation_},Unit : ${UnitName_},Period : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
+    return [`${reportName_}\nPeriod : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -126,28 +140,35 @@ const convertedData = (originalData: Data[]) => {
 
         i++;
 
-        const originalDate = item.date_time; // เช่น: '2025-01-20'
+        const originalDate = item.dateTime; // เช่น: '2025-01-20'
         
         // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
-        const newDate = originalDate.replace(/-/g, '/'); 
+        const newDate = originalDate.replaceAll(/-/g, '/'); 
         
         // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
         // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
         return { 
-            date_time: newDate,
-            remaining_tank3: item.remaining_tank3,
-            remaining_tank4: item.remaining_tank4,
-            total_use: item.total_use,
-            error: item.error,
-            pd1_total: item.pd1_total,
-            pd1_value: item.pd1_value,
-            pd1_ro: item.pd1_ro,
-            pd2_total: item.pd2_total,
-            pd2_value: item.pd2_value,
-            pd2_ro: item.pd2_ro,
-            pd3_total: item.pd3_total,
-            pd3_value: item.pd3_value,
-            pd3_ro: item.pd3_ro
+            dateTime: newDate, 
+            data_remaining_tank_Mix: Number(item.data_remaining_tank_Mix),
+            data_remaining_tank_Mix_chemical: Number(item.data_remaining_tank_Mix_chemical),
+            data_remaining_tank_Mix_ro: Number(item.data_remaining_tank_Mix_ro),
+            tank_Mix_between_day: Number(item.tank_Mix_between_day),
+            data_remaining_tank_Store: Number(item.data_remaining_tank_Store),
+            data_remaining_tank_Store_chemical: Number(item.data_remaining_tank_Store_chemical),
+            data_remaining_tank_Store_ro: Number(item.data_remaining_tank_Store_ro),
+            tank_Store_between_day: Number(item.tank_Store_between_day) ,
+            Total_ALL_FT_401: Number(item.Total_ALL_FT_401) ,
+            Total_ALL_FT_401_chemical: Number(item.Total_ALL_FT_401_chemical) ,
+            Total_ALL_FT_401_ro: Number(item.Total_ALL_FT_401_ro) ,
+            Total_ALL_FT_402: Number(item.Total_ALL_FT_402) ,
+            Total_ALL_FT_402_chemical: Number(item.Total_ALL_FT_402_chemical) ,
+            Total_ALL_FT_402_ro: Number(item.Total_ALL_FT_402_ro) ,
+            Total_ALL_FT_403: Number(item.Total_ALL_FT_403) ,
+            Total_ALL_FT_403_chemical: Number(item.Total_ALL_FT_403_chemical) ,
+            Total_ALL_FT_403_ro: Number(item.Total_ALL_FT_403_ro) ,
+            Total_ALL_Used: Number(item.Total_ALL_Used) ,
+            Total_ALL_Used_chemical: Number(item.Total_ALL_Used_chemical) ,
+            Total_ALL_Used_ro: Number(item.Total_ALL_Used_ro)
         };
     });
 };
@@ -224,15 +245,15 @@ export default async function Forms4csv(
 
     const datatable = convertedData(data);
 
-    console.log("start_timeDisplay :", start_timeDisplay);
-    console.log("end_timeDisplay :", end_timeDisplay);
+    // console.log("start_timeDisplay :", start_timeDisplay);
+    // console.log("end_timeDisplay :", end_timeDisplay);
     // setIsLoading(true);
 
     try {
 
         const today = format(new Date(), 'yyyy-MM-dd');
 
-        const filename: string = `Report Used ${plantName_} ${today} .csv`;
+        const filename: string = `Report Used ${plantName_}.csv`;
 
         const csvString = convertToCSV(
             datatable, 
@@ -246,7 +267,8 @@ export default async function Forms4csv(
         );
     
         // Create a Blob from the CSV string
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+         const BOM = '\uFEFF';
+        const blob = new Blob([BOM+csvString], { type: 'text/csv;charset=utf-8;' });
         
         // Create a temporary link element
         const link = document.createElement('a');

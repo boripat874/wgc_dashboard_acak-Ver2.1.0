@@ -120,7 +120,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
   }, [Wgcacak]);
 
   useEffect(() => {
-
+ 
     if (Acidrecieved) {
 
       setReceiveData(Acidrecieved.result.map((item: any) => ({
@@ -193,7 +193,6 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
         setPd2AcidLineConsumedData(mapData(results, 'usepd2'));
         setPd3AcidLineConsumedData(mapData(results, 'usepd3'));
         setEsAcidLineConsumedData(mapData(results, 'usees'));
-
 
         // --- 2. คำนวณ Pie Chart (เปลี่ยนจากค่าล่าสุด เป็นค่า SUM) ---
 
@@ -317,7 +316,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "HCI Fill (kg) SUM TANK 1 + TANK 2",
+              Iitlename: "คงเหลือ HCI รวมสูตร (kg)",
               key_value:"HCI",
               Data: ReceiveData,
               ColorChart: ColorChart,
@@ -330,7 +329,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "HCI Fill (kg) TANK 1",
+              Iitlename: "คงเหลือ HCI TANK 1 (LT101H) รวมสูตร (kg)",
               key_value:"HCI",
               Data: ReceiveTank1,
               ColorChart: ColorChart,
@@ -343,7 +342,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "HCI Fill (kg) TANK 2",
+              Iitlename: "คงเหลือ HCI TANK 2 (LT102H) รวมสูตร (kg)",
               key_value:"HCI",
               Data: ReceiveTank2,
               ColorChart: ColorChart,

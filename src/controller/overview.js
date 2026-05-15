@@ -1105,41 +1105,46 @@ export const reprotoverview = async (c) => {
                 const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
                 const System_Data_Density_lastday = rows.Density_N || 1;
 
+                // const C1_N = 4;
+                // const C2_N = 50;
+
+                // const C1_H = 6;
+                // const C2_H = 35;
+
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 // col A
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
                 const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
-                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8);
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
     
                 const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
-                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8);
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
 
                 const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101N || 0;
-                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8);
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
     
                 const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102N || 0;
-                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8);
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
     
                 // console.log("data_remaining_tank1_fill_total >>", data_remaining     
                 // col C
                 item.density_N = System_Data_Density;
-
                 
                 // col D
-                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill) * 1000;
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
                 item.data_remaining_fill_N = data_remaining_fill;
 
                 // col E
                 const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
                 item.data_remaining_fill_total_N = data_remaining_fill_total;
 
-                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday) * 1000;
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
                 const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
 
                 // col F
@@ -1169,21 +1174,21 @@ export const reprotoverview = async (c) => {
 
                 // col L
                 const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
 
                 // col M
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
-
-                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301 || 0;
+                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301N || 0;
                 const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
 
                 item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
 
                 // col N
                 const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
 
                 // col O
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
-
                 const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
                 const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
 
@@ -1220,7 +1225,7 @@ export const reprotoverview = async (c) => {
                 item.pd3_between_day_N = pd3_between_day;
 
                 // col S
-                item.total_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+                item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
 
                 // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
@@ -1249,7 +1254,7 @@ export const reprotoverview = async (c) => {
             const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
             // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-            const rows = await db('ScadaDataLogAlkaline')
+            const rows = await db('ScadaDataLogAcid')
                 .select("*")
                 .where('UnixTimestamp', '>=', prevStartSec)
                 .where('UnixTimestamp', '<=', prevEndSec)
@@ -1271,19 +1276,19 @@ export const reprotoverview = async (c) => {
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
                 const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
-                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8);
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
     
                 const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
-                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8);
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
 
                 const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101H || 0;
-                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8);
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
     
                 const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102H || 0;
-                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8);
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
     
                 // console.log("data_remaining_tank1_fill_total >>", data_remaining     
@@ -1291,14 +1296,14 @@ export const reprotoverview = async (c) => {
                 item.density_H = System_Data_Density;
 
                 // col D
-                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill) * 1000;
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
                 item.data_remaining_fill_H = data_remaining_fill;
 
                 // col E
                 const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
                 item.data_remaining_fill_total_H = data_remaining_fill_total;
 
-                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday) * 1000;
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
                 const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
 
                 // col F
@@ -1327,10 +1332,11 @@ export const reprotoverview = async (c) => {
 
                 // col L
                 const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+                // item.LT_PV_m3_LT_301_H = LT_PV_m3_LT_301;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+                item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
 
                 // col M
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
-
                 const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301H || 0;
                 const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
 
@@ -1338,10 +1344,11 @@ export const reprotoverview = async (c) => {
 
                 // col N
                 const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
-
-                // col O
                 const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
-
+                // item.LT_PV_m3_LT_401_H = LT_PV_m3_LT_401;
+                item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                
+                // col O
                 const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401H || 0);
                 const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
 
@@ -1385,7 +1392,7 @@ export const reprotoverview = async (c) => {
                 item.pd3_between_day_H = pd3_between_day;
 
                 // col R (ES)
-                const Total_ALL_FT_501_lastday = (rows.Aka_Total_ALL_FT_403H || 0);
+                const Total_ALL_FT_501_lastday = (rows.Aka_Total_ALL_FT_501H || 0);
                 const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
                 item.es_between_day_H = es_between_day;
 
@@ -1404,6 +1411,8 @@ export const reprotoverview = async (c) => {
             return null;
         }))
 
+        // console.log("data_NaOH_ __> ",hci_promises)
+
         // 1. รอให้ Promises ทั้งหมดทำงานเสร็จสิ้น และกรองค่าที่เป็น null ออก
         const naoh_results = naoh_promises.filter(Boolean);
         const hci_results = hci_promises.filter(Boolean);
@@ -1413,6 +1422,7 @@ export const reprotoverview = async (c) => {
 
         // จัดการข้อมูลจากฝั่ง NaOH
         naoh_results.forEach(item => {
+
             const date = item.dateTime;
             if (!mergedMap[date]) {
                 mergedMap[date] = { dateTime: date };
@@ -1423,6 +1433,15 @@ export const reprotoverview = async (c) => {
 
         // จัดการข้อมูลจากฝั่ง HCI
         hci_results.forEach(item => {
+
+            // if (index_hci_results === 0) {
+                
+            //     startTimestamp_ = item.dateTime;
+            // }else if(naoh_results.length === index_hci_results - 1){
+                
+            //     endTimestamp_ = item.dateTime;
+            // }
+
             const date = item.dateTime;
             if (!mergedMap[date]) {
                 mergedMap[date] = { dateTime: date };
@@ -1436,13 +1455,13 @@ export const reprotoverview = async (c) => {
             // รายการ Field ทั้งหมดที่คุณต้องการตรวจสอบ (ตัวอย่าง)
             const fieldsToCheck = [
                 'density_N', 'data_remaining_fill_N', 'data_remaining_fill_total_N', 'Fill_between_day_N','data_Fill_N',
-                'Total_ALL_FT_101_N', 'Total_ALL_FT_201_N', 'chemical_between_day_N', 'ro_between_day_N', 'tank_Mix_between_day_N',
+                'Total_ALL_FT_101_N', 'Total_ALL_FT_201_N', 'chemical_between_day_N', 'ro_between_day_N', 'data_remaining_tank_Mix_N','data_remaining_tank_Store_N','tank_Mix_between_day_N',
                 'tank_Store_between_day_N', 'Total_ALL_FT_401_N', 'Total_ALL_FT_402_N', 'Total_ALL_FT_403_N', 'pd1_between_day_N',
-                'pd2_between_day_N', 'pd3_between_day_N', 'total_use_between_day_N',
+                'pd2_between_day_N', 'pd3_between_day_N', 'totalAll_use_between_day_N',
                 'density_H', 'data_remaining_fill_H', 'data_remaining_fill_total_H', 'Fill_between_day_H', 'data_Fill_H',
-                'Total_ALL_FT_101_H', 'Total_ALL_FT_201_H', 'chemical_between_day_H', 'ro_between_day_H', 'tank_Mix_between_day_H',
-                'tank_Store_between_day_H', 'Total_ALL_FT_401_H', 'Total_ALL_FT_402_H', 'Total_ALL_FT_403_H', 'pd1_between_day_H',
-                'pd2_between_day_H', 'pd3_between_day_H', 'total_use_between_day_H',
+                'Total_ALL_FT_101_H', 'Total_ALL_FT_201_H', 'chemical_between_day_H', 'ro_between_day_H', 'data_remaining_tank_Mix_H','data_remaining_tank_Store_H', 'tank_Mix_between_day_H',
+                'tank_Store_between_day_H', 'Total_ALL_FT_401_H', 'Total_ALL_FT_402_H', 'Total_ALL_FT_403_H', 'Total_ALL_FT_501_H', 'pd1_between_day_H',
+                'pd2_between_day_H', 'pd3_between_day_H', 'es_between_day_H', 'total_use_between_day_H' , 'totalAll_use_between_day_H',
             ];
 
             fieldsToCheck.forEach(field => {
@@ -1457,8 +1476,9 @@ export const reprotoverview = async (c) => {
         // const final_items = promises_.filter(item => item !== null);
         return resolve({ 
 
-            start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
-            end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+            period_Display: `${final_results.length == 0 ? "-" : final_results.length} Day`,
+            start_timeDisplay: final_results[0]?.dateTime || "--",
+            end_timeDisplay: final_results[final_results.length - 1]?.dateTime || '--',
             total: final_results.length,
             result: final_results 
             // message: 'Hello, Smart Automation Thailand!',

@@ -96,19 +96,10 @@ export const acidrecieved = async (c) => {
                 const kg_101H = data_remaining_tank1_fill_total - data_remaining_tank1_fill_total_lastday;
                 const kg_102H = data_remaining_tank2_fill_total - data_remaining_tank2_fill_total_lastday;
     
-                const total_tank_fill = kg_101H + kg_102H;
+                const total_tank_fill = data_remaining_tank1_fill_total + data_remaining_tank2_fill_total;
 
-                // console.log("data_remaining_tank1_fill_total >>", data_remaining_tank1_fill_total);
-                // console.log("data_remaining_tank1_fill_total_lastday >>", data_remaining_tank1_fill_total_lastday);
-                // console.log("data_remaining_tank2_fill_total >>", data_remaining_tank2_fill_total);
-                // console.log("data_remaining_tank2_fill_total_lastday >>", data_remaining_tank2_fill_total_lastday);
-
-                // console.log("kg_101H >>", kg_101H);
-                // console.log("kg_102H >>", kg_102H);
-                // console.log("total_tank_fill >>", total_tank_fill);
-
-                item.kg_101H = kg_101H;
-                item.kg_102H = kg_102H;
+                item.kg_101H = data_remaining_tank1_fill_total;
+                item.kg_102H = data_remaining_tank2_fill_total;
                 item.total_tank_fill = total_tank_fill; 
     
                 return {

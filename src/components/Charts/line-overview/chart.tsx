@@ -96,11 +96,15 @@ export function FillOverviewChart({ data }: PropsType) {
     },
     },
     xaxis: {
+      tickAmount: isMobile ? 7 : 7, // กำหนดจำนวนขีดบนแกน X
+      labels: {
+        hideOverlappingLabels: true
+      },
       axisBorder: {
-        show: false,
+        show: true,
       },
       axisTicks: {
-        show: false,
+        show: true,
       },
     },
   };

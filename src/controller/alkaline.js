@@ -234,10 +234,10 @@ export const alkalirecieved = async (c) => {
                 const kg_101N = data_remaining_tank1_fill_total - data_remaining_tank1_fill_total_lastday;
                 const kg_102N = data_remaining_tank2_fill_total - data_remaining_tank2_fill_total_lastday;
     
-                const total_tank_fill = kg_101N + kg_102N;
+                const total_tank_fill = data_remaining_tank1_fill_total + data_remaining_tank2_fill_total;
     
-                item.kg_101N = kg_101N;
-                item.kg_102N = kg_102N;
+                item.kg_101N = data_remaining_tank1_fill_total;
+                item.kg_102N = data_remaining_tank2_fill_total;
                 item.total_tank_fill = total_tank_fill; 
     
                 return {
@@ -809,7 +809,7 @@ export const reportnaohrecieved = async (c) => {
 
             const constant_tank1_fill = 0.8;
             const constant_tank2_fill = 0.8;
-
+ 
             // col A
             item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
@@ -863,8 +863,9 @@ export const reportnaohrecieved = async (c) => {
       const naoh_results = naoh_promises.filter(Boolean);
 
       resolve({ 
-        start_timeDisplay: format(timestamp.startTimestamp * 1000, 'yyyy-MM-dd'),
-        end_timeDisplay: format(timestamp.endTimestamp * 1000, 'yyyy-MM-dd'),
+        period_Display: `${naoh_results.length == 0 ? "-" : naoh_results.length} Day`,
+        start_timeDisplay: naoh_results[0]?.dateTime || "--",
+        end_timeDisplay: naoh_results[naoh_results.length - 1]?.dateTime || '--',
         total: naoh_results.length,
         result: naoh_results 
         // message: 'Hello, Smart Automation Thailand!',
@@ -949,7 +950,7 @@ export const reportnaohmixed = async (c) => {
             const constant_tank3_Mix = 0.3;
             const constant_tank4_Store = 1.3;
 
-            // const constant_chemical = 4;
+            // const C1 = 4;
 
             const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1010,9 +1011,9 @@ export const reportnaohmixed = async (c) => {
       const naoh_results = naoh_promises.filter(Boolean);
 
       resolve({ 
-
-        start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
-        end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+        period_Display: `${naoh_results.length == 0 ? "-" : naoh_results.length} Day`,
+        start_timeDisplay: naoh_results[0]?.dateTime || "--",
+        end_timeDisplay: naoh_results[naoh_results.length - 1]?.dateTime || '--',
         total: naoh_results.length,
         result: naoh_results 
         // message: 'Hello, Smart Automation Thailand!',
@@ -1057,6 +1058,12 @@ export const reportnaohconsumed = async (c) => {
     const unit = c.req.query('unit') || 'kg';
     const aggregation = c.req.query('aggregation') || 'perday';
 
+    const data_NaOH_ = await db('ScadaDataLogAlkaline')
+      .select('*')
+      .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+      .where('UnixTimestamp', '<', timestamp.endTimestamp)
+      .orderBy('UnixTimestamp', 'asc');
+
     // 1. สร้าง Array ของ Promises จากการ Map ข้อมูล
     const naoh_promises = await Promise.all(data_NaOH_.map(async (item) => {
 
@@ -1094,7 +1101,9 @@ export const reportnaohconsumed = async (c) => {
           const constant_tank3_Mix = 0.3;
           const constant_tank4_Store = 1.3;
 
-          const constant_chemical = 4;
+          const C1 = 4;
+          const C2 = 50;
+          
 
           const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1109,7 +1118,7 @@ export const reportnaohconsumed = async (c) => {
           item.data_remaining_tank_Mix = data_remaining_tank_Mix;
 
           // col C
-          const data_remaining_tank_Mix_chemical = (data_remaining_tank_Mix * constant_chemical) / 50;
+          const data_remaining_tank_Mix_chemical = (data_remaining_tank_Mix * C1) / C2;
           item.data_remaining_tank_Mix_chemical = data_remaining_tank_Mix_chemical;
 
           // col D
@@ -1128,7 +1137,7 @@ export const reportnaohconsumed = async (c) => {
           item.data_remaining_tank_Store = data_remaining_tank_Store;
 
           // col G
-          const data_remaining_tank_Store_chemical = (data_remaining_tank_Store * constant_chemical) / 50;
+          const data_remaining_tank_Store_chemical = (data_remaining_tank_Store * C1) / C2;
           item.data_remaining_tank_Store_chemical = data_remaining_tank_Store_chemical;
 
           // col H
@@ -1141,12 +1150,15 @@ export const reportnaohconsumed = async (c) => {
           item.tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
           // col J
-          const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
-          
+          const Total_ALL_FT_401_today = (item.Aka_Total_ALL_FT_401N || 0);
+          const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401N || 0);
+
+          const Total_ALL_FT_401 = Total_ALL_FT_401_today - Total_ALL_FT_401_lastday;
           item.Total_ALL_FT_401 = Total_ALL_FT_401;
 
           // col K
-          const Total_ALL_FT_401_chemical = (Total_ALL_FT_401 * constant_chemical) / 50;
+          const Total_ALL_FT_401_chemical = (Total_ALL_FT_401 * C1) / C2;
+          
           item.Total_ALL_FT_401_chemical = Total_ALL_FT_401_chemical;
 
           // col L
@@ -1154,12 +1166,15 @@ export const reportnaohconsumed = async (c) => {
           item.Total_ALL_FT_401_ro = Total_ALL_FT_401_ro;
           
           // col M
-          const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+          const Total_ALL_FT_402_today = (item.Aka_Total_ALL_FT_402N || 0);
+          const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402N || 0);
+
+          const Total_ALL_FT_402 = Total_ALL_FT_402_today - Total_ALL_FT_402_lastday;
 
           item.Total_ALL_FT_402 = Total_ALL_FT_402;
 
           // col N
-          const Total_ALL_FT_402_chemical = (Total_ALL_FT_402 * constant_chemical) / 50;
+          const Total_ALL_FT_402_chemical = (Total_ALL_FT_402 * C1) / C2;
           item.Total_ALL_FT_402_chemical = Total_ALL_FT_402_chemical;
 
           // col O
@@ -1167,12 +1182,15 @@ export const reportnaohconsumed = async (c) => {
           item.Total_ALL_FT_402_ro = Total_ALL_FT_402_ro;
 
           // col P
-          const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+          const Total_ALL_FT_403_today = (item.Aka_Total_ALL_FT_403N || 0);
+          const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403N || 0);
+
+          const Total_ALL_FT_403 = Total_ALL_FT_403_today - Total_ALL_FT_403_lastday;
 
           item.Total_ALL_FT_403 = Total_ALL_FT_403;
 
           // col Q
-          const Total_ALL_FT_403_chemical = (Total_ALL_FT_403 * constant_chemical) / 50;
+          const Total_ALL_FT_403_chemical = (Total_ALL_FT_403 * C1) / C2;
           item.Total_ALL_FT_403_chemical = Total_ALL_FT_403_chemical;
 
           // col R
@@ -1201,8 +1219,9 @@ export const reportnaohconsumed = async (c) => {
 
     resolve({ 
 
-      start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
-      end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+      period_Display: `${naoh_results.length == 0 ? "-" : naoh_results.length} Day`,
+      start_timeDisplay: naoh_results[0]?.dateTime || "--",
+      end_timeDisplay: naoh_results[naoh_results.length - 1]?.dateTime || '--',
       total: naoh_results.length,
       result: naoh_results 
       // message: 'Hello, Smart Automation Thailand!',

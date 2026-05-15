@@ -307,7 +307,7 @@ export default function AlkalineDashboard() {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "NaOH Fill (kg) SUM TANK 1 + TANK 2",
+              Iitlename: "คงเหลือ NaOH รวมสูตร (kg)",
               key_value:"NaOH",
               Data: ReceiveData,
               ColorChart: ColorChart,
@@ -320,7 +320,7 @@ export default function AlkalineDashboard() {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "NaOH Fill (kg) TANK 1",
+              Iitlename: "คงเหลือ NaOH TANK 1 (LT101N) รวมสูตร (kg)",
               key_value:"NaOH",
               Data: ReceiveTank1,
               ColorChart: ColorChart,
@@ -333,7 +333,7 @@ export default function AlkalineDashboard() {
           <ChartRecieve
 
             tank = {{
-              Iitlename: "NaOH Fill (kg) TANK 2",
+              Iitlename: "คงเหลือ NaOH TANK 2 (LT102N) รวมสูตร (kg)",
               key_value:"NaOH",
               Data: ReceiveTank2,
               ColorChart: ColorChart,

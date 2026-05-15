@@ -89,14 +89,14 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
     <div className={`report-section bg-white dark:bg-gray-dark rounded-lg shadow-sm flex flex-col dark:border-gray-dark`}>
       
       {/* Title Bar */}
-      <div className={`report-title text-white p-2 font-bold text-center rounded-t-lg ${plantName === 'Alkaline' ? 'bg-[#C558C4] dark:bg-[#C558C4]' : 'bg-[#ED9832] dark:bg-[#ED9832]'}`}>
+      <div className={`report-title text-white p-2 font-bold text-center rounded-t-lg ${plantName === 'Alkaline' ? 'bg-[#C558C4] dark:bg-[#C558C4]' : plantName === 'Alkaline' ? 'bg-[#ED9832] dark:bg-[#ED9832]' : 'bg-[#EE4D55] dark:bg-[#EE4D55]'}`}>
         <p>{title}</p>
       </div>
 
-      <div className="report-choose p-4 flex flex-col gap-4">
+      <div className="report-choose p-4 pb-1 flex flex-col gap-4">
 
         {/* Row 1: Tank Selector (Only for Received) */}
-        {sectionName === 'Received' && (
+        {/* {sectionName === 'Received' && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-800 dark:text-gray-4">TANK</label>
             <select 
@@ -112,10 +112,10 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
               <option value="12">TANK 1 + TANK 2</option>
             </select>
           </div>
-        )}
+        )} */}
 
         {/* Row 2: Unit Selector */}
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <label className="text-sm font-semibold text-gray-800 dark:text-gray-4">Unit</label>
 
           <select 
@@ -131,7 +131,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
             <option value="Liter">Liter</option>
           </select>
 
-        </div>
+        </div> */}
 
         {/* Row 3: Plant Use (Only for Used) */}
         {/* {sectionName === 'Used' && (
@@ -150,7 +150,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
         )} */}
 
         {/* Row 4: Aggregation */}
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <label className="text-sm font-semibold text-gray-800 dark:text-gray-4">Data aggregation</label>
           <select 
             className="border border-gray-300 dark:border-gray-600 dark:text-gray-4 rounded p-2 text-sm"
@@ -163,7 +163,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
             <option value="perday">Per Day</option>
             {sectionName !== 'Used' && <option value="usage">Usage</option>}
           </select>
-        </div>
+        </div> */}
 
         {/* Row 5: Period */}
         <div className="flex flex-col gap-1 ">
@@ -215,7 +215,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
       </div>
  
       {/* Buttons: ย้ายมาอยู่ด้านล่างสุดและจัดกึ่งกลาง */}
-      <div className="mt-2 p-4 pt-0 flex flex-row justify-end gap-2">
+      <div className="mt-0 p-4 pt-0 flex flex-row justify-end gap-2">
         <div 
           className="w-[100px] bg-gray-200 hover:bg-[#2e2d2d] hover:text-gray-200 dark:bg-gray-600 text-[#2e2d2d] dark:text-gray-4 text-center  py-2  rounded cursor-pointer hover:bg-opacity-90 font-bold text-xs shadow-sm"
           onClick={onClickPDF}

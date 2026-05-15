@@ -11,41 +11,21 @@ import jsPDF from 'jspdf';
 import { applyPlugin } from 'jspdf-autotable';
 import {CheckPeriod,Aggregation,Unit} from '../reportPdf/funtionComponents';
 import { fetcher } from "@/app/utils/fetcher";
+import "../../../../public/fonts/thsarabun-normal";
+import "../../../../public/fonts/thsarabunbold-normal";
 
 // Call applyPlugin to extend the jsPDF object
 applyPlugin(jsPDF);
-
  
 // import CustomLegendProps from '@/components/reportPdf/legendcustent';
 
-interface report{
-  ordernumber: string;
-  receiptnumber: string;
-  paymentType : number;
-  receiptcash: number;
-  receiptchange: number;
-  receiptdiscount: number;
-  totalprice: number;
-  create_at: string;
-  orderid: string;
-}
-
 interface Data {
-  date_time: string;
-  start_time: string;
-  end_time: string;
-  Before_Fill?: number;
-  After_Fill?: number;
-  Error_Fill?: number;
-  result_Before_Fill?: number;
-  result_After_Fill?: number;
-  result_Error_Fill?: number;
-  System_Data_Fill?: number;
-  System_Data_Density?: number;
-  
-  number?: number;
-  tank1: number;
-  tank2: number;
+  dateTime: string;
+  density: number;
+  data_remaining_fill: number;
+  data_remaining_fill_total: number;
+  Fill_between_day: number;
+  data_Fill: number;
 }
 
 // Sample data for the chart
@@ -87,7 +67,7 @@ export default async function Forms1(
         return "reportnaohrecieved";
       }
 
-    }
+    } 
 
     apiUrl =  await geturl();
 
@@ -176,28 +156,24 @@ export default async function Forms1(
 
           i++;
 
-          const originalDate = item.date_time; // เช่น: '2025-01-20'
+          const originalDate = item.dateTime; // เช่น: '2025-01-20'
 
           
           // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
-          const newDate = originalDate.replace(/-/g, '/'); 
+          const newDate = originalDate.replaceAll(/-/g, '/'); 
 
-          tank = tank === "12" ? "1+2" : tank;
+          // tank = tank === "12" ? "1+2" : tank;
           
           // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
           // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
           return { 
-            ...item, 
-            number: i, 
-            date_time: newDate, 
-            Before_Fill: Number(item.Before_Fill),
-            After_Fill: Number(item.After_Fill),
-            Error_Fill: Number(item.Error_Fill),
-            result_Before_Fill: Number(item.result_Before_Fill),
-            result_After_Fill: Number(item.result_After_Fill),
-            result_Error_Fill: Number(item.result_Error_Fill),
-            System_Data_Fill: Number(item.System_Data_Fill),
-            System_Data_Density: Number(item.System_Data_Density),
+            // ...item, 
+            dateTime: newDate, 
+            density: Number(item.density).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            data_remaining_fill: Number(item.data_remaining_fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            data_remaining_fill_total: Number(item.data_remaining_fill_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            Fill_between_day: Number(item.Fill_between_day).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            data_Fill: Number(item.data_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
           };
 
         });
@@ -206,6 +182,8 @@ export default async function Forms1(
 
       // 4. Assign the result back to datatable
       const datatable = await convertedData(data);
+
+      // console.log("datatable >>>",datatable)
 
       // =========================================================================== การประมวลผลสำหรับ Main chart ---
 
@@ -219,26 +197,30 @@ export default async function Forms1(
           var originalDate = "-/-";
           let monthAndDay = "-/-";
 
-          if (aggregation === "perday") {
+          // if (aggregation === "perday") {
 
-            originalDate = item.date_time; // เช่น: '2025/01/20'
+          //   originalDate = item.dateTime; // เช่น: '2025/01/20'
 
-            // 1. ตัดสตริงจากตำแหน่งที่ 5 (index 5 คือตำแหน่งของเดือน) -> ผลลัพธ์: '01/20'
-            monthAndDay = originalDate.slice(5); 
+          //   // 1. ตัดสตริงจากตำแหน่งที่ 5 (index 5 คือตำแหน่งของเดือน) -> ผลลัพธ์: '01/20'
+          //   monthAndDay = originalDate.slice(5); 
 
-          }else{
-            monthAndDay = item.date_time+" "+item.start_time; // เช่น: '2025/01/20 01:00'
-          }
+          // }else{
+          //   // monthAndDay = item.dateTime+" "+item.start_time; // เช่น: '2025/01/20 01:00'
+          //   monthAndDay = item.dateTime; // เช่น: '2025/01/20 01:00'
+
+          // }
+
+          monthAndDay = item.dateTime; // เช่น: '2025/01/20 01:00'
 
           // 2. แทนที่ตัวคั่น '/' ด้วยขีดกลาง '-' -> ผลลัพธ์: '01-20'
-          const newDate = monthAndDay.replace('-', '/'); 
+          const newDate = monthAndDay.replaceAll('-', '/'); 
           
           // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
           // NOTE: If you need to keep other properties, you must spread them: {...item, date_time: newDate}
           return { 
             ...item, 
             date_time: newDate , 
-            value: Number(item.System_Data_Fill)
+            value: Number(item.Fill_between_day)
           }; 
 
         });
@@ -275,7 +257,7 @@ export default async function Forms1(
       chartContainer.style.width = '1000px'; // Set width for the chart
       chartContainer.style.height = '300px'; // Set height for the chart
       // chartContainer.style.border = '1px solid #000';
-      chartContainer.style.color = '#000';
+      // chartContainer.style.color = '#000';
       chartContainer.style.padding = '10px';
 
       document.body.appendChild(chartContainer);
@@ -285,7 +267,7 @@ export default async function Forms1(
       const CustomLegend = (props: { payload: any[] } ) => {
           const { payload } = props;
           return (
-              <ul data-component-id="src\components\reportPdf\forms1.tsx:253:14" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="253" data-component-file="forms1.tsx" data-component-name="ul" data-component-content="%7B%22elementName%22%3A%22ul%22%7D" style={{
+              <ul  style={{
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -293,16 +275,16 @@ export default async function Forms1(
                   margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
                   {payload.map((entry, index) => (
-                      <li data-component-id="src\components\reportPdf\forms1.tsx:261:22" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="261" data-component-file="forms1.tsx" data-component-name="li" data-component-content="%7B%22elementName%22%3A%22li%22%7D"
+                      <li 
                           key={`item-${index}`}
                           style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}
                       >
                           {/* ไอคอนที่กำหนดเอง */}
-                          <svg data-component-id="src\components\reportPdf\forms1.tsx:266:26" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="266" data-component-file="forms1.tsx" data-component-name="svg" data-component-content="%7B%22elementName%22%3A%22svg%22%7D" width="16" height="16" viewBox="0 0 32 32" style={{ marginRight: '5px' }}>
-                              <rect data-component-id="src\components\reportPdf\forms1.tsx:267:30" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="267" data-component-file="forms1.tsx" data-component-name="rect" data-component-content="%7B%22elementName%22%3A%22rect%22%7D" x="0" y="0" width="32" height="50" fill={entry.color} />
+                          <svg  width="16" height="16" viewBox="0 0 32 32" style={{ marginRight: '5px' }}>
+                              <rect  x="0" y="0" width="32" height="50" fill={entry.color} />
                           </svg>
                           {/* ข้อความที่กำหนดเอง */}
-                          <span data-component-id="src\components\reportPdf\forms1.tsx:270:26" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="270" data-component-file="forms1.tsx" data-component-name="span" data-component-content="%7B%22elementName%22%3A%22span%22%2C%22className%22%3A%22pb-3%22%7D" className='pb-3'>{`System Data Fill (kg)`}</span>
+                          <span className='pb-3 text-black text-xs'>{`รับเข้าใหม่ (kg)`}</span>
                       </li>
                   ))}
               </ul>
@@ -316,18 +298,18 @@ export default async function Forms1(
         const CustomBarLabel = (props: any) => {
             const { x, y, width, height, value } = props;
             return (
-                <text data-component-id="src\components\reportPdf\forms1.tsx:284:16" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="284" data-component-file="forms1.tsx" data-component-name="text" data-component-content="%7B%22elementName%22%3A%22text%22%7D" x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={14}>
+                <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
                     {/* {value} */}
                 </text>
             );
         };
 
         return (
-          <ResponsiveContainer data-component-id="src\components\reportPdf\forms1.tsx:291:10" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="291" data-component-file="forms1.tsx" data-component-name="ResponsiveContainer" data-component-content="%7B%22elementName%22%3A%22ResponsiveContainer%22%7D" width="100%" height="100%">
-              <BarChart data-component-id="src\components\reportPdf\forms1.tsx:292:14" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="292" data-component-file="forms1.tsx" data-component-name="BarChart" data-component-content="%7B%22elementName%22%3A%22BarChart%22%7D" data={datachart}>
-                  <CartesianGrid data-component-id="src\components\reportPdf\forms1.tsx:293:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="293" data-component-file="forms1.tsx" data-component-name="CartesianGrid" data-component-content="%7B%22elementName%22%3A%22CartesianGrid%22%7D" strokeDasharray="1 1" stroke="#D9D9D9" />
-                  <XAxis data-component-id="src\components\reportPdf\forms1.tsx:294:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="294" data-component-file="forms1.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="date_time" stroke="#000" fontSize={16} />
-                  <YAxis data-component-id="src\components\reportPdf\forms1.tsx:295:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="295" data-component-file="forms1.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={16} tickFormatter={(value) => value.toLocaleString()} />
+          <ResponsiveContainer  width="100%" height="100%">
+              <BarChart  data={datachart}>
+                  <CartesianGrid  strokeDasharray="1 1" stroke="#D9D9D9" />
+                  <XAxis data-component-id="src\components\reportPdf\forms1.tsx:294:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="294" data-component-file="forms1.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="date_time" stroke="#000" fontSize={12} />
+                  <YAxis data-component-id="src\components\reportPdf\forms1.tsx:295:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="295" data-component-file="forms1.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
                   <Bar data-component-id="src\components\reportPdf\forms1.tsx:296:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="296" data-component-file="forms1.tsx" data-component-name="Bar" data-component-content="%7B%22elementName%22%3A%22Bar%22%7D" dataKey="value" fill={`${bgcolor_}`} label={<CustomBarLabel data-component-id="src\components\reportPdf\forms1.tsx:296:67" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="296" data-component-file="forms1.tsx" data-component-name="CustomBarLabel" data-component-content="%7B%22elementName%22%3A%22CustomBarLabel%22%7D" />}>
                       {/* The LabelList component is removed */}
                   </Bar>
@@ -346,7 +328,7 @@ export default async function Forms1(
       };
 
       // Render the component into the container
-      root.render(<ChartToRender data-component-id="src\components\reportPdf\forms1.tsx:314:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="314" data-component-file="forms1.tsx" data-component-name="ChartToRender" data-component-content="%7B%22elementName%22%3A%22ChartToRender%22%7D" />);
+      root.render(<ChartToRender />);
 
       // Wait for a short moment to ensure the chart is rendered
       await new Promise(resolve => setTimeout(resolve, 1000)); 
@@ -354,8 +336,11 @@ export default async function Forms1(
       // Use html2canvas to convert the div to a canvas image
       const canvas = await html2canvas(chartContainer, { 
         // logging: true,
-        scale: 0.6, // Adjust the scale as needed
+        // scale: 1.0, // Adjust the scale as needed
+        // useCORS: true,
+        scale: 3, // เพิ่มความละเอียดเป็น 3 เท่า
         useCORS: true,
+        logging: false,
       });
       
       const chartImage = await canvas.toDataURL('image/png');
@@ -378,24 +363,26 @@ export default async function Forms1(
 
           if (aggregation === "perday") {
 
-            originalDate = item.date_time; // เช่น: '2025/01/20'
+            originalDate = item.dateTime; // เช่น: '2025/01/20'
 
             // 1. ตัดสตริงจากตำแหน่งที่ 5 (index 5 คือตำแหน่งของเดือน) -> ผลลัพธ์: '01/20'
             monthAndDay = originalDate.slice(5); 
 
           }else{
-            monthAndDay = item.date_time+" "+item.start_time; // เช่น: '2025/01/20 01:00'
+            // monthAndDay = item.dateTime+" "+item.start_time; // เช่น: '2025/01/20 01:00'
+            monthAndDay = item.dateTime; // เช่น: '2025/01/20 01:00'
+
           }
 
           // 2. แทนที่ตัวคั่น '/' ด้วยขีดกลาง '-' -> ผลลัพธ์: '01-20'
-          const newDate = monthAndDay.replace('-', '/'); 
+          const newDate = monthAndDay.replaceAll('-', '/'); 
           
           // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
           // NOTE: If you need to keep other properties, you must spread them: {...item, date_time: newDate}
           return { 
             ...item, 
             date_time: newDate , 
-            value: Number(item.result_Error_Fill)
+            value: Number(item.Fill_between_day)
           }; 
 
         });
@@ -422,7 +409,7 @@ export default async function Forms1(
           const { payload } = props;
 
           return (
-              <ul data-component-id="src\components\reportPdf\forms1.tsx:390:14" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="390" data-component-file="forms1.tsx" data-component-name="ul" data-component-content="%7B%22elementName%22%3A%22ul%22%7D" style={{
+              <ul style={{
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -430,16 +417,16 @@ export default async function Forms1(
                   margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
                   {payload.map((entry, index) => (
-                      <li data-component-id="src\components\reportPdf\forms1.tsx:398:22" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="398" data-component-file="forms1.tsx" data-component-name="li" data-component-content="%7B%22elementName%22%3A%22li%22%7D"
+                      <li 
                           key={`item-${index}`}
                           style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}
                       >
                           {/* ไอคอนที่กำหนดเอง */}
-                          <svg data-component-id="src\components\reportPdf\forms1.tsx:403:26" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="403" data-component-file="forms1.tsx" data-component-name="svg" data-component-content="%7B%22elementName%22%3A%22svg%22%7D" width="16" height="16" viewBox="0 0 32 32" style={{ marginRight: '5px' }}>
-                              <rect data-component-id="src\components\reportPdf\forms1.tsx:404:30" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="404" data-component-file="forms1.tsx" data-component-name="rect" data-component-content="%7B%22elementName%22%3A%22rect%22%7D" x="0" y="0" width="32" height="100" fill={entry.color} />
+                          <svg width="16" height="16" viewBox="0 0 32 32" style={{ marginRight: '5px' }}>
+                              <rect x="0" y="0" width="32" height="100" fill={entry.color} />
                           </svg>
                           {/* ข้อความที่กำหนดเอง */}
-                          <span data-component-id="src\components\reportPdf\forms1.tsx:407:26" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="407" data-component-file="forms1.tsx" data-component-name="span" data-component-content="%7B%22elementName%22%3A%22span%22%2C%22className%22%3A%22pb-3%22%7D" className='pb-3'>{`Error Fill (${unit_value})`}</span>
+                          <span className='pb-3 text-black text-xs'>{`ผลต่างเข้มข้นใน Tank ระหว่างวัน (kg)`}</span>
                       </li>
                   ))}
               </ul>
@@ -452,8 +439,8 @@ export default async function Forms1(
             <ResponsiveContainer data-component-id="src\components\reportPdf\forms1.tsx:417:12" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="417" data-component-file="forms1.tsx" data-component-name="ResponsiveContainer" data-component-content="%7B%22elementName%22%3A%22ResponsiveContainer%22%7D" width="100%" height="100%">
                 <LineChart data-component-id="src\components\reportPdf\forms1.tsx:418:16" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="418" data-component-file="forms1.tsx" data-component-name="LineChart" data-component-content="%7B%22elementName%22%3A%22LineChart%22%7D" data={linedatachart} >
                     <CartesianGrid data-component-id="src\components\reportPdf\forms1.tsx:419:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="419" data-component-file="forms1.tsx" data-component-name="CartesianGrid" data-component-content="%7B%22elementName%22%3A%22CartesianGrid%22%7D" strokeDasharray="1 1" stroke="#D9D9D9" />
-                    <XAxis data-component-id="src\components\reportPdf\forms1.tsx:420:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="420" data-component-file="forms1.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="date_time" stroke="#000" fontSize={16} />
-                    <YAxis data-component-id="src\components\reportPdf\forms1.tsx:421:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="421" data-component-file="forms1.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={16} tickFormatter={(value) => value.toLocaleString()} />
+                    <XAxis data-component-id="src\components\reportPdf\forms1.tsx:420:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="420" data-component-file="forms1.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="date_time" stroke="#000" fontSize={12} />
+                    <YAxis data-component-id="src\components\reportPdf\forms1.tsx:421:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="421" data-component-file="forms1.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
                     
                     {/* === FIX: Change <Bar> to <Line> === */}
                     <Line data-component-id="src\components\reportPdf\forms1.tsx:424:20" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="424" data-component-file="forms1.tsx" data-component-name="Line" data-component-content="%7B%22elementName%22%3A%22Line%22%2C%22type%22%3A%22monotone%22%7D" 
@@ -487,9 +474,14 @@ export default async function Forms1(
 
       const linecanvas = await html2canvas(lineChartContainer, { 
         // logging: true,
-        scale: 0.6, // Adjust the scale as needed
+        // scale: 0.8, // Adjust the scale as needed
+        // useCORS: true,
+        scale: 3, // ปรับให้คมชัดเท่ากัน
         useCORS: true,
+        logging: false,
       });
+
+
 
       const linechartImage = linecanvas.toDataURL('image/png');
 
@@ -543,64 +535,16 @@ export default async function Forms1(
           creator: 'WGC Dashboard system',
         });
 
-        let fontLoaded = false;
-
-        // --- Alternative: Load font file at runtime and convert to Base64 ---
-        const fontUrl = '/fonts/thsarabunitalic.ttf'; // Path relative to the public folder
-        // const boldFontUrl = '/fonts/THSarabunNew-Bold.ttf'; // Example for bold
   
-        const response = await fetch(fontUrl);
-
-        if (!response.ok) {
-          throw new Error(`ไม่สามารถโหลดไฟล์ฟอนต์ได้: ${response.statusText}`);
-        }
-
-        const fontBlob = await response.blob();
-  
-        // Convert Blob to Base64
-        const base64Font = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-              resolve(reader.result.split(',')[1]); // Get only the Base64 part
-            } else {
-              reject(new Error("ไม่สามารถอ่านไฟล์ฟอนต์เป็น Base64 ได้"));
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(fontBlob);
-        });
-  
-        if (!base64Font) {
-          throw new Error("การแปลงฟอนต์เป็น Base64 ล้มเหลว");
-        }
-  
-        // doc.addFileToVFS("/fonts/thsarabunitalic.ttf", base64Font);
-        doc.addFont("/fonts/thsarabun.ttf", "Sarabun", "normal");
-        doc.addFont("/fonts/thsarabunitalic.ttf", "Sarabun", "italic");
-        doc.addFont("/fonts/thsarabunbold.ttf", "Sarabun", "bold");
-        doc.addFont("/fonts/thsarabunbolditalic.ttf", "Sarabun", "bolditalic");
-        doc.addFont("/fonts/Sarabun-ExtraBold.ttf", "Sarabun", "extrabold");
-
-  
-        doc.setFont("Sarabun", "normal");
-        fontLoaded = true;
+        doc.setFont("Sarabun", "bold");
         
         // --- Content ---
         const pageWidth = doc.internal.pageSize.getWidth();
         const margin = 5;
         let yPosition = 20;
         
-
-        
         doc.setFontSize(16);
         // doc.setFontStyle('bold');
-
-        if (fontLoaded) {
-          doc.setFont("Sarabun", "extrabold"); // Use Sarabun for header if loaded
-        } else {
-          doc.setFont("helvetica", "bold"); // Fallback
-        }
 
         doc.rect(5, yPosition-12, (pageWidth - 2 * margin), 20);
 
@@ -613,14 +557,6 @@ export default async function Forms1(
 
         doc.text(`Report Fill ${plantName_}`, pageWidth / 2, yPosition, { align: 'center'});
         
-  
-        doc.setFontSize(16);
-
-        if (fontLoaded) {
-          doc.setFont("Sarabun", "normal"); // Use Sarabun for body text
-        } else {
-          doc.setFont("helvetica", "normal"); // Fallback
-        }
 
         // if (receiptOrder) {
           
@@ -635,26 +571,26 @@ export default async function Forms1(
           const formattedOrderTime = `${orderDate.getHours()}:${orderDate.getMinutes()}`;
 
           const rows2 = margin+40;
-          const rows3 = margin+70;
+          const rows3 = margin+80;
           const rows4 = margin+130;
           const rows5 = margin+170;
           const rows6 = margin+220;
 
-          doc.setFontSize(12);
+          doc.setFontSize(10);
 
-          doc.text(`Tank : ${tank}`, margin+10, yPosition);
+          // doc.text(`Tank : ${tank}`, margin+10, yPosition);
           
           // yPosition += lineHeight;
           
-          doc.text(`Unit : ${unit_value}`, rows2, yPosition);
-          doc.text(`Data aggregation : ${aggregation_value}`, rows3, yPosition);
-          doc.text(`Period : ${period_value}`, rows4, yPosition);
+          // doc.text(`Unit : ${unit_value}`, rows2, yPosition);
+          // doc.text(`Data aggregation : ${aggregation_value}`, rows3, yPosition);
+          doc.text(`Period : ${period_value}`, margin+10, yPosition);
           // doc.text(`Period : 1 Day`, rows3, yPosition);
 
           // yPosition += lineHeight;
 
-          doc.text(`Time Start : ${start_timeDisplay}`, rows5, yPosition);
-          doc.text(`Time End : ${end_timeDisplay}`, rows6, yPosition);
+          doc.text(`Time Start : ${start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
+          doc.text(`Time End : ${end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
           // doc.text(`Time Start : 2025-08-08`, margin, yPosition);
           // doc.text(`Time End : 2025-08-12`, rows2, yPosition);
 
@@ -667,11 +603,11 @@ export default async function Forms1(
           const chartHeight = (canvas.height / canvas.width) * chartWidth;
           
           // yPosition += 10;
-          doc.addImage(chartImage, 'PNG', chartX, yPosition, chartWidth, chartHeight);
+          doc.addImage(chartImage, 'PNG', chartX, yPosition, chartWidth, chartHeight,undefined, 'FAST');
 
           const linechartHeight = (linecanvas.height / linecanvas.width) * chartWidth;
 
-          doc.addImage(linechartImage, 'PNG', chartX, yPosition+chartHeight, chartWidth, linechartHeight);
+          doc.addImage(linechartImage, 'PNG', chartX, yPosition+chartHeight, chartWidth, linechartHeight,undefined, 'FAST');
 
           yPosition += lineHeight+30;
 
@@ -686,30 +622,33 @@ export default async function Forms1(
 
           // Define columns and rows for the table
           const tableColumn = [
-            "Date", 
-            "Time start", 
-            "Time stop", 
-            `Before Fill \n(${unit_value})`, 
-            `After Fill \n(${unit_value})`, 
-            `Error Fill \n(${unit_value})`, 
-            `Before Fill \n(${unit_value})`, 
-            `After Fill \n(${unit_value})`, 
-            `Error Fill \n(${unit_value})`, 
-            `System Data Fill \n(kg)`, 
-            "System Data Density"];
-          const tableRows = datatable.map((item) => [
-            item.date_time, 
-            item.start_time, 
-            item.end_time, 
-            Number(item.Before_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.After_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.Error_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.result_Before_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.result_After_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.result_Error_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.System_Data_Fill).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            Number(item.System_Data_Density).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          ]);
+            "วันที่", 
+            "Density", 
+            `คงเหลือ Tank เข้มข้น\n(L)`, 
+            `คงเหลือเข้มข้นรวมสูตร\n(kg)`, 
+            `ผลต่างเข้มข้นใน Tank\nระหว่างวัน (kg)`, 
+            `รับเข้าใหม่\n(kg)`, 
+          ];
+
+          let tableRows = [] as any;
+
+          datatable.forEach((item) => {
+
+            // console.log("item >>", item);
+
+
+            tableRows.push([
+              item.dateTime,
+              item.density,
+              item.data_remaining_fill,
+              item.data_remaining_fill_total,
+              item.Fill_between_day,
+              item.data_Fill
+            ])
+          });
+
+          // console.log("tableRows >>", tableRows);
+
 
           // Add the table to the document
           (doc as any).autoTable({
@@ -725,17 +664,19 @@ export default async function Forms1(
             headStyles: {
               halign: 'center', // This aligns the text in the header cells to the center
               valign: 'middle', // Vertical center alignment
-              fillColor: [242, 242, 242], // Light gray background for the header
-              textColor: [0, 0, 0] // Black text for the header
-            },
-            bodyStyles: {
-              halign: 'center' // This aligns the text in the body cells to the center
+              fillColor: [230, 240, 255], // สีฟ้าอ่อนตามหัวตาราง
+              textColor: [0, 0, 0],
+              fontStyle: 'bold'
             },
             styles: {
-              fontSize: 8,
-              cellPadding: 2,
-              lineColor: [0, 0, 0], // Light gray borders for all cells
-              lineWidth: 0.1 // Thin lines
+              font: "Sarabun",
+              fontSize: 10, // ลดขนาดฟอนต์ลงเพื่อให้พอดีกับแนวนอน
+              cellPadding: 1,
+              halign: 'center',
+              valign: 'middle',
+              lineColor: [0, 0, 0],
+              lineWidth: 0.1,
+              overflow: 'linebreak'
             },
           });
 

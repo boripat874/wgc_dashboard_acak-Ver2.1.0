@@ -19,29 +19,17 @@ import {CheckPeriod,Aggregation,Unit} from '../reportPdf/funtionComponents';
 applyPlugin(jsPDF);
 
 // import CustomLegendProps from '@/components/reportPdf/legendcustent';
-
-interface report{
-  ordernumber: string;
-  receiptnumber: string;
-  paymentType : number;
-  receiptcash: number;
-  receiptchange: number;
-  receiptdiscount: number;
-  totalprice: number;
-  create_at: string;
-  orderid: string;
-}
  
 interface Data {
-  number?: number;
-  date_time: string;
-  start_time: string;
-  end_time: string;
-  total: number;
-  main_value?: number;
-  ro_value?: number;
-  tank3: number;
-  error_value?: number;
+  dateTime:string;
+  Total_ALL_FT_101: number;
+  Total_ALL_FT_201: number;
+  chemical_between_day: number;
+  ro_between_day: number;
+  data_remaining_tank_Mix: number;
+  tank_Mix_between_day: number;
+  data_remaining_tank_Store: number;
+  tank_Store_between_day: number;
 }
 
 // Sample data for the chart
@@ -70,14 +58,16 @@ function convertToCSV(
     });
 
     const HEADERS: { [key in keyof Data]: string } = {
-        date_time: "Date",
-        start_time: "Time Start",
-        end_time: "Time Stop",
-        total: `Total (${UnitName_})`,
-        main_value: `${plantName_} (${UnitName_})`,
-        ro_value: `RO (${UnitName_})`,
-        tank3: `Mixer Tank 3 (${UnitName_})`,
-        error_value: `Error (${UnitName_})`,
+        dateTime: "วันที่",
+        Total_ALL_FT_101: `ตัวเลขมิเตอร์ ${plantName_} (L)`,
+        Total_ALL_FT_201: "ตัวเลขมิเตอร์น้ำ RO (L)",
+        chemical_between_day: `ผลต่างมิเตอร์ระหว่างวัน${plantName_} `,
+        ro_between_day: `ผลต่างมิเตอร์ระหว่างวัน น้ำ RO (L)`,
+        data_remaining_tank_Mix: `คงเหลือ Tank Mix (L)`,
+        tank_Mix_between_day: `ผลต่างในTank Mix ระหว่างวัน (L)`,
+        data_remaining_tank_Store: `คงเหลือ Tank Store (L)`,
+        tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน (L)`,
+
     };
 
     if (data.length === 0) {
@@ -98,7 +88,7 @@ function convertToCSV(
     );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_},Aggregation : ${aggregation_},Unit : ${UnitName_},Period : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
+    return [`${reportName_}\nTime Start : ${date_start_.replace(/-/g, '/')},Time End : ${date_end_.replace(/-/g, '/')}`,headerRow, ...dataRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -109,7 +99,7 @@ const convertedData = (originalData: Data[]) => {
 
         i++;
 
-        const originalDate = item.date_time; // เช่น: '2025-01-20'
+        const originalDate = item.dateTime; // เช่น: '2025-01-20'
         
         // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
         const newDate = originalDate.replace(/-/g, '/'); 
@@ -117,14 +107,15 @@ const convertedData = (originalData: Data[]) => {
         // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
         // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
         return { 
-            date_time: newDate,
-            start_time: item.start_time,
-            end_time: item.end_time,
-            total: item.total,
-            main_value: item.main_value,
-            ro_value: item.ro_value,
-            tank3: item.tank3,
-            error_value: item.error_value
+            dateTime: newDate,
+            Total_ALL_FT_101: item.Total_ALL_FT_101,
+            Total_ALL_FT_201:  item.Total_ALL_FT_201,
+            chemical_between_day:  item.chemical_between_day,
+            ro_between_day:  item.ro_between_day,
+            data_remaining_tank_Mix:  item.data_remaining_tank_Mix,
+            tank_Mix_between_day:  item.tank_Mix_between_day,
+            data_remaining_tank_Store:  item.data_remaining_tank_Store,
+            tank_Store_between_day:  item.tank_Store_between_day
         };
     });
 };
@@ -194,7 +185,7 @@ export default async function Forms2csv(
 
         const today = format(new Date(), 'yyyy-MM-dd');
 
-        const filename: string = `Report Mix ${plantName_} ${today} .csv`;
+        const filename: string = `Report Mix ${plantName_}.csv`;
 
         const csvString = convertToCSV(
             datatable, 
@@ -208,7 +199,8 @@ export default async function Forms2csv(
         );
     
         // Create a Blob from the CSV string
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM+csvString], { type: 'text/csv;charset=utf-8;' });
         
         // Create a temporary link element
         const link = document.createElement('a');

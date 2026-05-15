@@ -22,48 +22,48 @@ export const NAV_DATA = [
           },
         ],
       },
-      // {
-      //   title: "Reports Overview",
-      //   icon: Icons.Report,
-      //   url: "/reports/overview", 
-      //   items: [],
-      // },
-      // {
-      //   title: "Reports Alkaline",
-      //   icon: Icons.Report,
-      //   items: [
-      //     {
-      //       title: "NaOH Fill",
-      //       url: "/reports/alkaline-recieved",
-      //     },
-      //     {
-      //       title: "NaOH Mixer",
-      //       url: "/reports/alkaline-mixer",
-      //     },
-      //     {
-      //       title: "NaOH Used",
-      //       url: "/reports/alkaline-used",
-      //     },
-      //   ],
-      // },
-      // {
-      //   title: "Reports Acid",
-      //   icon: Icons.Report,
-      //   items: [
-      //     {
-      //       title: "HCl Fill",
-      //       url: "/reports/acid-recieved",
-      //     },
-      //     {
-      //       title: "HCl Mixer",
-      //       url: "/reports/acid-mixer",
-      //     },
-      //     {
-      //       title: "HCl Used",
-      //       url: "/reports/acid-used",
-      //     },
-      //   ],
-      // },
+      {
+        title: "Reports Overview",
+        icon: Icons.Report,
+        url: "/reports/overview", 
+        items: [],
+      },
+      {
+        title: "Reports Alkaline",
+        icon: Icons.Report,
+        items: [
+          {
+            title: "NaOH Fill",
+            url: "/reports/alkaline-recieved",
+          },
+          {
+            title: "NaOH Mixer",
+            url: "/reports/alkaline-mixer",
+          },
+          {
+            title: "NaOH Used",
+            url: "/reports/alkaline-used",
+          },
+        ],
+      },
+      {
+        title: "Reports Acid",
+        icon: Icons.Report,
+        items: [
+          {
+            title: "HCl Fill",
+            url: "/reports/acid-recieved",
+          },
+          {
+            title: "HCl Mixer",
+            url: "/reports/acid-mixer",
+          },
+          {
+            title: "HCl Used",
+            url: "/reports/acid-used",
+          },
+        ],
+      },
       // {
       //   title: "Calendar",
       //   url: "/calendar",

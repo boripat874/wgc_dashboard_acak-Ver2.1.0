@@ -39,7 +39,7 @@ export default function Page() {
         }
 
         
-        if (alkRecTank !== "--" && alkRecUnit !== "--" && alkRecAgg !== "--" && alkRecPeriod !== "--") {
+        if (alkRecPeriod !== "--") {
             console.log("Tank:", alkRecTank, "Unit:", alkRecUnit, "Agg:", alkRecAgg, "Period:", alkRecPeriod, "Start:", alkRecStart, "End:", alkRecEnd);
             Forms1(renderReport, "Alkaline", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
         }
@@ -85,7 +85,7 @@ export default function Page() {
                 {/* Add your report content here */}
             </div>
 
-            <div className=" mt-3 grid xl:grid-cols-3 2xl:gap-7.5">
+            <div className=" mt-3 2xl:gap-7.5">
 
                 {/* <div className="grid gap-y-3">
 
@@ -105,7 +105,7 @@ export default function Page() {
 
                 <Suspense fallback={<OverviewCardsSkeleton />}>
                     
-                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-800px xl:h-auto rounded-lg p-2">
+                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-[900px] rounded-lg p-2">
 
                         {/* เช็ค pdfUrl ตรงนี้ */}
                         {pdfUrl ? (

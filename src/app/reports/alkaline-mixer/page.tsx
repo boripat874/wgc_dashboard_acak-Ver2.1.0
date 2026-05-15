@@ -47,7 +47,7 @@ export default function Page(props: Props) {
             return () => clearTimeout(timer);
         }
 
-        if (alkMixUnit !== "--" && alkMixAgg !== "--" && alkMixPeriod !== "--") {
+        if (alkMixPeriod !== "--") {
 
             Forms2(renderReport, "Alkaline", alkMixUnit, "3",  alkMixAgg, alkMixPeriod, alkMixStart, alkMixEnd)
         }
@@ -89,7 +89,7 @@ export default function Page(props: Props) {
 
             </div>
 
-            <div className=" mt-3 grid xl:grid-cols-3 2xl:gap-7.5">
+            <div className=" mt-3 2xl:gap-7.5">
 
                 {/* <div className="grid gap-y-3">
 
@@ -109,7 +109,7 @@ export default function Page(props: Props) {
 
                 <Suspense fallback={<OverviewCardsSkeleton />}>
                     
-                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-800px xl:h-auto rounded-lg p-2">
+                    <div className="col-span-2 bg-white dark:bg-gray-dark mt-2 xl:mt-0 h-[900px] rounded-lg p-2">
 
                         {/* เช็ค pdfUrl ตรงนี้ */}
                         {pdfUrl ? (
