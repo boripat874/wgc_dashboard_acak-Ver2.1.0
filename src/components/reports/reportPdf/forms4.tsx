@@ -102,8 +102,9 @@ export default async function Forms4(
 
       var apiUrl = ""
 
-      var start_timeDisplay = date_start;
-      var end_timeDisplay = date_end;
+      var period_Display = "- Day";
+      var start_timeDisplay = "--";
+      var end_timeDisplay = "--";
       
       const geturl = async() => {
       
@@ -129,8 +130,9 @@ export default async function Forms4(
         // ตรวจสอบว่า datareponse และ datareponse.result มีค่าอยู่จริง
         if (datareponse && datareponse.result) {
           data = datareponse.result;
-          start_timeDisplay = datareponse.start_timeDisplay || date_start;
-          end_timeDisplay = datareponse.end_timeDisplay || date_end;
+          period_Display = datareponse.period_Display;
+          start_timeDisplay = datareponse.start_timeDisplay;
+          end_timeDisplay = datareponse.end_timeDisplay;
         } else {
           // กรณีไม่มีข้อมูล ให้กำหนดเป็น Array ว่าง หรือจัดการตามเหมาะสม
           data = [];
@@ -626,14 +628,9 @@ export default async function Forms4(
           // doc.text(`Unit : ${unit_value}`, rows2, yPosition);
           // doc.text(`Data aggregation : ${aggregation_value}`, rows3, yPosition);
           // doc.text(`Period : ${period}`, rows3, yPosition);
-          doc.text(`Period : ${period_value}`, margin+10, yPosition);
-
-          // yPosition += lineHeight+5;
-
-          // doc.text(`Time Start : ${date_start}`, margin, yPosition);
-          // doc.text(`Time End : ${date_end}`, rows2, yPosition);
-          doc.text(`Time Start : ${start_timeDisplay}`, rows2, yPosition);
-          doc.text(`Time End : ${end_timeDisplay}`, rows3, yPosition);
+          doc.text(`Period : ${period_Display}`, margin+10, yPosition);
+          doc.text(`Time Start : ${start_timeDisplay == "--"?start_timeDisplay : start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
+          doc.text(`Time End : ${end_timeDisplay == "--"?end_timeDisplay : end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
 
           yPosition += lineHeight;
 
@@ -669,34 +666,34 @@ export default async function Forms4(
           const headerRow1 = [
             { content: 'วันที่', rowSpan: 2}, // รวม 2 แถว
             { content: 'คงเหลือ Tank Mix (L)', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `ผลต่างใน Tank Mix\nระหว่างวัน\n${C1} (L)`, rowSpan: 2}, // รวม 2 แถว
+            { content: `ผลต่างใน Tank Mix\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
             { content: 'คงเหลือ Tank Store (L)', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `ผลต่างใน Tank Store\nระหว่างวัน\n${C1} (L)`, rowSpan: 2}, // รวม 2 แถว
+            { content: `ผลต่างใน Tank Store\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
             { content: 'ผลต่างมิเตอร์ระหว่างวัน PD1', colSpan: 3}, // รวม 3 คอลัมน์
             { content: 'ผลต่างมิเตอร์ระหว่างวัน PD2', colSpan: 3}, // รวม 3 คอลัมน์
             { content: 'ผลต่างมิเตอร์ระหว่างวัน PD3', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `Uesd total\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+            { content: `Uesd total ${plantName_}\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
             { content: `Uesd total ${plantName_}\n(${C2}%) (L)`, rowSpan: 2}, // รวม 2 แถว
             { content: `Uesd total RO\n(L)`, rowSpan: 2}, // รวม 2 แถว
-
           ];
 
           // หัวตารางแถวที่ 2: กำหนดหัวข้อย่อย
           const headerRow2 = [
-            { content: `Total\n(${C1}%) (L)`}, 
-            { content: `${plantName_}\n(${C2}%) (L)`},
-            { content: `RO\n(L)`},
-            { content: `Total\n(${C1}%) (L)`}, 
-            { content: `${plantName_}\n(${C2}%) (L)`},
-            { content: `RO\n(L)`},
-            { content: `Total\n(${C1}%) (L)`}, 
-            { content: `${plantName_}\n(${C2}%) (L)`},
-            { content: `RO\n(L)`},{ content: `Total\n(${C1}%) (L)`}, 
-            { content: `${plantName_}\n(${C2}%) (L)`},
-            { content: `RO\n(L)`},{ content: `Total\n(${C1}%) (L)`}, 
-            { content: `${plantName_}\n(${C2}%) (L)`},
-            { content: `RO\n(L)`},
-            
+            { content: `${plantName_}\n(${C1}%) (L)`}, 
+            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+            { content: `คิดเป็น RO\n(L)`},
+            { content: `${plantName_}\n(${C1}%) (L)`}, 
+            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+            { content: `คิดเป็น RO\n(L)`},
+            { content: `${plantName_}\n(${C1}%) (L)`}, 
+            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+            { content: `คิดเป็น RO\n(L)`},
+            { content: `${plantName_}\n(${C1}%) (L)`}, 
+            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+            { content: `คิดเป็น RO\n(L)`},
+            { content: `${plantName_}\n(${C1}%) (L)`}, 
+            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+            { content: `คิดเป็น RO\n(L)`},
             // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD1
             // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD2
             // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD3

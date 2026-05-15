@@ -34,13 +34,14 @@ var data: Data[] = [];
 
 async function convertToCSV(
     data: Data[], 
+    plantName_: string,
     reportName_: string,
     UnitName_: string,
     tank_: string,
     aggregation_: string,
     period_: string,
     date_start_: string,
-    date_end_: string
+    date_end_: string,
 ): Promise<string> {
 
     // 1. แสดง Loading ทันที
@@ -53,14 +54,26 @@ async function convertToCSV(
         }
     });
 
-    const unit_value = await Unit(UnitName_);
+    var C1 = 4;
+    var C2 = 50;
+
+    if(plantName_ === "NaOH"){
+        C1 = 4;
+        C2 = 50;
+    }else if(plantName_ === "HCl"){
+        C1 = 6;
+        C2 = 35;
+
+    }
+
+    // const unit_value = await Unit(UnitName_);
 
     const HEADERS: { [key in keyof Data]: string } = {
         dateTime: 'วันที่',
         density: 'Density',
-        data_remaining_fill: 'คงเหลือ Tank เข้มข้น (L)',
-        data_remaining_fill_total: `คงเหลือเข้มข้นรวมสูตร kg)`,
-        Fill_between_day: `ผลต่างเข้มข้นใน Tank ระหว่างวัน (kg)`,
+        data_remaining_fill: `คงเหลือ Tank ${plantName_} (${C2}%) (L)`,
+        data_remaining_fill_total: `คงเหลือ ${plantName_} (${C2}%) รวมสูตร (kg)`,
+        Fill_between_day: `ผลต่าง ${plantName_} (${C2}%) ใน Tank ระหว่างวัน (kg)`,
         data_Fill: `รับเข้าใหม่ (kg)`
     };
  
@@ -190,6 +203,7 @@ export default async function Forms1csv(
 
         const csvString = await convertToCSV(
             datatable, 
+            plantName_,
             "Report Fill "+plantName_, 
             unit_value,
             tank,

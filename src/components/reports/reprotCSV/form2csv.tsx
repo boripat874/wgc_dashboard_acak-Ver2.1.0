@@ -38,13 +38,13 @@ var data: Data[] = [];
 
 function convertToCSV(
     data: Data[], 
-    plantName_: string, 
+    plantName_: string,
     reportName_: string,
     UnitName_: string,
     aggregation_: string,
     period_: string,
     date_start_: string,
-    date_end_: string
+    date_end_: string,
 ): string {
 
     // 1. แสดง Loading ทันที
@@ -57,17 +57,33 @@ function convertToCSV(
         }
     });
 
+    var C1 = 4;
+    var C2 = 50;
+    var nameTank1 = "FT101N";
+    var nameTank2 = "FT102N";
+
+    if(plantName_ === "NaOH"){
+        C1 = 4;
+        C2 = 50;
+        nameTank1 = "FT101N";
+        nameTank2 = "FT102N";
+    }else if(plantName_ === "HCl"){
+        C1 = 6;
+        C2 = 35;
+        nameTank1 = "FT101H";
+        nameTank2 = "FT102H";
+    }
+
     const HEADERS: { [key in keyof Data]: string } = {
         dateTime: "วันที่",
-        Total_ALL_FT_101: `ตัวเลขมิเตอร์ ${plantName_} (L)`,
-        Total_ALL_FT_201: "ตัวเลขมิเตอร์น้ำ RO (L)",
-        chemical_between_day: `ผลต่างมิเตอร์ระหว่างวัน${plantName_} `,
-        ro_between_day: `ผลต่างมิเตอร์ระหว่างวัน น้ำ RO (L)`,
+        Total_ALL_FT_101: `ตัวเลขมิเตอร์ (${nameTank1}) ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_201: `ตัวเลขมิเตอร์ (${nameTank2}) นํ้า RO (L)`,
+        chemical_between_day: `ผลต่างมิเตอร์ระหว่างวัน (${nameTank1}) ${plantName_} (${C2}%) (L)`,
+        ro_between_day: `ผลต่างมิเตอร์ระหว่างวัน (${nameTank2}) นํ้า RO  (L)`,
         data_remaining_tank_Mix: `คงเหลือ Tank Mix (L)`,
-        tank_Mix_between_day: `ผลต่างในTank Mix ระหว่างวัน (L)`,
+        tank_Mix_between_day: `ผลต่างใน Tank Mix ระหว่างวัน (L)`,
         data_remaining_tank_Store: `คงเหลือ Tank Store (L)`,
         tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน (L)`,
-
     };
 
     if (data.length === 0) {

@@ -1122,7 +1122,8 @@ export const reportnaohconsumed = async (c) => {
           item.data_remaining_tank_Mix_chemical = data_remaining_tank_Mix_chemical;
 
           // col D
-          item.data_remaining_tank_Mix_ro = data_remaining_tank_Mix - data_remaining_tank_Mix_chemical;
+          const data_remaining_tank_Mix_ro = data_remaining_tank_Mix - data_remaining_tank_Mix_chemical;
+          item.data_remaining_tank_Mix_ro = data_remaining_tank_Mix_ro;
 
           // col E
           const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301N || 0;
@@ -1141,7 +1142,8 @@ export const reportnaohconsumed = async (c) => {
           item.data_remaining_tank_Store_chemical = data_remaining_tank_Store_chemical;
 
           // col H
-          item.data_remaining_tank_Store_ro = data_remaining_tank_Store - data_remaining_tank_Store_chemical;
+          const data_remaining_tank_Store_ro = data_remaining_tank_Store - data_remaining_tank_Store_chemical;
+          item.data_remaining_tank_Store_ro = data_remaining_tank_Store_ro;
 
           // col I
           const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
@@ -1198,13 +1200,13 @@ export const reportnaohconsumed = async (c) => {
           item.Total_ALL_FT_403_ro = Total_ALL_FT_403_ro;
 
           // col S
-          item.Total_ALL_Used = (Total_ALL_FT_401 + Total_ALL_FT_402 + Total_ALL_FT_403);
+          item.Total_ALL_Used = (data_remaining_tank_Mix + data_remaining_tank_Store + Total_ALL_FT_401 + Total_ALL_FT_402 + Total_ALL_FT_403);
 
           // col T
-          item.Total_ALL_Used_chemical = (Total_ALL_FT_401_chemical + Total_ALL_FT_402_chemical + Total_ALL_FT_403_chemical);
+          item.Total_ALL_Used_chemical = (data_remaining_tank_Mix_chemical + data_remaining_tank_Store_chemical + Total_ALL_FT_401_chemical + Total_ALL_FT_402_chemical + Total_ALL_FT_403_chemical);
 
           // col U
-          item.Total_ALL_Used_ro = (Total_ALL_FT_401_ro + Total_ALL_FT_402_ro + Total_ALL_FT_403_ro);
+          item.Total_ALL_Used_ro = (data_remaining_tank_Mix_ro + data_remaining_tank_Store_ro + Total_ALL_FT_401_ro + Total_ALL_FT_402_ro + Total_ALL_FT_403_ro);
 
           // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
           return {

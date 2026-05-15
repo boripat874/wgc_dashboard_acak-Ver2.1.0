@@ -136,8 +136,8 @@ export default async function Forms0(
       // return;
 
       data = []
-      start_timeDisplay = "2026-01-01";
-      end_timeDisplay = "2026-01-01";
+      start_timeDisplay = "--";
+      end_timeDisplay = "--";
     
       return;
     });

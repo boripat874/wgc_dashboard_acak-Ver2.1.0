@@ -1,4 +1,3 @@
-import React from 'react'
 // import { useEffect } from 'react';
 // import ReactDOM from 'react-dom/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,LabelList, LineChart, Line, Cell } from 'recharts';

@@ -54,8 +54,12 @@ export default async function Forms1(
 
     // const [receiptOrder, setReceipt] = useState<report>();
     var apiUrl = "reportnaohrecieved"
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
+    var period_Display = "- Day";
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
+
+    var C1 = 4;
+    var C2 = 50;
     
     const geturl = async() => {
 
@@ -86,8 +90,9 @@ export default async function Forms1(
       // ตรวจสอบว่า datareponse และ datareponse.result มีค่าอยู่จริง
       if (datareponse && datareponse.result) {
         data = datareponse.result;
-        start_timeDisplay = datareponse.start_timeDisplay || date_start;
-        end_timeDisplay = datareponse.end_timeDisplay || date_end;
+        period_Display = datareponse.period_Display;
+        start_timeDisplay = datareponse.start_timeDisplay;
+        end_timeDisplay = datareponse.end_timeDisplay;
       } else {
         // กรณีไม่มีข้อมูล ให้กำหนดเป็น Array ว่าง หรือจัดการตามเหมาะสม
         data = [];
@@ -108,8 +113,8 @@ export default async function Forms1(
       // return;
 
       data = []
-      start_timeDisplay = "2026-03-25";
-      end_timeDisplay = "2026-03-31";
+      start_timeDisplay = "--";
+      end_timeDisplay = "--";
       
       return;
     });
@@ -126,17 +131,19 @@ export default async function Forms1(
 
       var plantName_ = "";
       var bgcolor_ = "#B162AF";
+      var C1 = 4;
+      var C2 = 50;
 
       if(plantName === "Alkaline"){
-
         plantName_ = "NaOH";
         bgcolor_ = "#B162AF";
-
+        C1 = 4;
+        C2 = 50;
       }else if(plantName === "Acid"){
-
         plantName_ = "HCl";
         bgcolor_ = "#B9792B"; // Set a different background color for Acid
-
+        C1 = 6;
+        C2 = 35;
       }
 
     try {
@@ -584,13 +591,9 @@ export default async function Forms1(
           
           // doc.text(`Unit : ${unit_value}`, rows2, yPosition);
           // doc.text(`Data aggregation : ${aggregation_value}`, rows3, yPosition);
-          doc.text(`Period : ${period_value}`, margin+10, yPosition);
-          // doc.text(`Period : 1 Day`, rows3, yPosition);
-
-          // yPosition += lineHeight;
-
-          doc.text(`Time Start : ${start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
-          doc.text(`Time End : ${end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
+          doc.text(`Period : ${period_Display}`, margin+10, yPosition);
+          doc.text(`Time Start : ${start_timeDisplay == "--"?start_timeDisplay : start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
+          doc.text(`Time End : ${end_timeDisplay == "--"?end_timeDisplay : end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
           // doc.text(`Time Start : 2025-08-08`, margin, yPosition);
           // doc.text(`Time End : 2025-08-12`, rows2, yPosition);
 
@@ -624,10 +627,10 @@ export default async function Forms1(
           const tableColumn = [
             "วันที่", 
             "Density", 
-            `คงเหลือ Tank เข้มข้น\n(L)`, 
-            `คงเหลือเข้มข้นรวมสูตร\n(kg)`, 
-            `ผลต่างเข้มข้นใน Tank\nระหว่างวัน (kg)`, 
-            `รับเข้าใหม่\n(kg)`, 
+            `คงเหลือ Tank ${plantName_} (${C2}%)\n(L)`, 
+            `คงเหลือ ${plantName_} (${C2}%) รวมสูตร\n(kg)`, 
+            `ผลต่าง ${plantName_} (${C2}%) ใน Tank\nระหว่างวัน (kg)`, 
+            `ผลต่าง ${plantName_} (${C2}%) ใน Tank\nระหว่างวัน (kg)`, 
           ];
 
           let tableRows = [] as any;
@@ -635,7 +638,6 @@ export default async function Forms1(
           datatable.forEach((item) => {
 
             // console.log("item >>", item);
-
 
             tableRows.push([
               item.dateTime,

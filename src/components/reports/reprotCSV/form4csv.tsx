@@ -59,7 +59,8 @@ function convertToCSV(
     aggregation_: string,
     period_: string,
     date_start_: string,
-    date_end_: string
+    date_end_: string,
+    
 
 ): string {
 
@@ -88,26 +89,26 @@ function convertToCSV(
     const HEADERS: { [key in keyof Data]: string } = {
 
         dateTime: "วันที่",
-        data_remaining_tank_Mix: `คงเหลือ Tank Mix Total (${C1}%) (L)`,
-        data_remaining_tank_Mix_chemical: `คงเหลือ Tank Mix ${plantName_} (${C2}%) (L)`,
-        data_remaining_tank_Mix_ro: `คงเหลือ Tank Mix RO (L)`,
-        tank_Mix_between_day: `ผลต่างใน Tank Mix ระหว่างวัน ${C1} (L)`,
-        data_remaining_tank_Store: `คงเหลือ Tank Store (${C1}%) (L)`,
-        data_remaining_tank_Store_chemical: `คงเหลือ Tank Store ${plantName_} (${C2}%) (L)`,
-        data_remaining_tank_Store_ro: `คงเหลือ Tank Store RO (L)`,
-        tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน ${C1} (L)`,
-        Total_ALL_FT_401: `ผลต่างมิเตอร์ระหว่างวัน PD1 (${C1}%) (L)`,
-        Total_ALL_FT_401_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD1 ${plantName_} (${C2}%) (L)`,
-        Total_ALL_FT_401_ro: `ผลต่างมิเตอร์ระหว่างวัน PD1 RO (L)`,
-        Total_ALL_FT_402: `ผลต่างมิเตอร์ระหว่างวัน PD2 (${C1}%) (L)`,
-        Total_ALL_FT_402_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD2 ${plantName_} (${C2}%) (L)`,
-        Total_ALL_FT_402_ro: `ผลต่างมิเตอร์ระหว่างวัน PD2 RO (L)`,
-        Total_ALL_FT_403: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C2}%) (L)`,
-        Total_ALL_FT_403_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C2}%) (L)`,
-        Total_ALL_FT_403_ro: `ผลต่างมิเตอร์ระหว่างวัน PD3 RO (L)`,
-        Total_ALL_Used: `Uesd total (${C1}%) (L)`,
-        Total_ALL_Used_chemical: `Uesd total ${plantName_} (${C2}%) (L)`,
-        Total_ALL_Used_ro: `Uesd total RO (L)`
+        data_remaining_tank_Mix: `คงเหลือ Tank Mix ${plantName_} (${C1}%) (L)`,
+        data_remaining_tank_Mix_chemical: `คงเหลือ Tank Mix คิดเป็น ${plantName_} (${C2}%) (L)`,
+        data_remaining_tank_Mix_ro: `คงเหลือ Tank Mix คิดเป็น RO (L)`,
+        tank_Mix_between_day: `ผลต่างใน Tank Mix ระหว่างวัน (${C1}%) (L)`,
+        data_remaining_tank_Store: `คงเหลือ Tank Store ${plantName_} (${C1}%) (L)`,
+        data_remaining_tank_Store_chemical: `คงเหลือ Tank Store คิดเป็น ${plantName_} (${C2}%) (L)`,
+        data_remaining_tank_Store_ro: `คงเหลือ Tank Store คิดเป็น RO (L)`,
+        tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน (${C1}%) (L)`,
+        Total_ALL_FT_401: `ผลต่างมิเตอร์ระหว่างวัน PD1 ${plantName_} (${C1}%) (L)`,
+        Total_ALL_FT_401_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD1 คิดเป็น ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_401_ro: `ผลต่างมิเตอร์ระหว่างวัน PD1 คิดเป็น RO (L)`,
+        Total_ALL_FT_402: `ผลต่างมิเตอร์ระหว่างวัน PD2 ${plantName_} (${C1}%) (L)`,
+        Total_ALL_FT_402_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD2 คิดเป็น ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_402_ro: `ผลต่างมิเตอร์ระหว่างวัน PD2 คิดเป็น RO (L)`,
+        Total_ALL_FT_403: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C1}%) (L)`,
+        Total_ALL_FT_403_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD3 คิดเป็น ${plantName_} (${C2}%) (L)`,
+        Total_ALL_FT_403_ro: `ผลต่างมิเตอร์ระหว่างวัน PD3 คิดเป็น RO (L)`,
+        Total_ALL_Used: `Used total ${plantName_} (${C1}%) (L)`,
+        Total_ALL_Used_chemical: `Used total ${plantName_} (${C2}%) (L)`,
+        Total_ALL_Used_ro: `Used total RO (L)`
         
     };
 

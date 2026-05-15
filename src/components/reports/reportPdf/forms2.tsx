@@ -68,8 +68,9 @@ export default async function Forms2(
     });
     
     var apiUrl = "";
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
+    var period_Display = "- Day";
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
 
 
     const geturl = async() => {
@@ -98,8 +99,9 @@ export default async function Forms2(
         // ตรวจสอบว่า datareponse และ datareponse.result มีค่าอยู่จริง
         if (datareponse && datareponse.result) {
           data = datareponse.result;
-          start_timeDisplay = datareponse.start_timeDisplay || date_start;
-          end_timeDisplay = datareponse.end_timeDisplay || date_end;
+          period_Display = datareponse.period_Display;
+          start_timeDisplay = datareponse.start_timeDisplay;
+          end_timeDisplay = datareponse.end_timeDisplay;
         } else {
           // กรณีไม่มีข้อมูล ให้กำหนดเป็น Array ว่าง หรือจัดการตามเหมาะสม
           data = [];
@@ -131,15 +133,25 @@ export default async function Forms2(
       // var bgcolorRo_ = "#0077c8";
       var bgcolor1 = "#60B813";
       var bgcolor2 = "#239BA7";
-
-
+      var C1 = 4;
+      var C2 = 50;
+      var nameTank1 = "FT101N";
+      var nameTank2 = "FT102N";
 
       if(plantName === "Alkaline"){
         plantName_ = "NaOH";
         bgcolor_ = "#B162AF";
+        C1 = 4;
+        C2 = 50;
+        nameTank1 = "FT101N";
+        nameTank2 = "FT102N";
       }else if(plantName === "Acid"){
         plantName_ = "HCl";
         bgcolor_ = "#B9792B"; // Set a different background color for Acid
+        C1 = 6;
+        C2 = 35;
+        nameTank1 = "FT101H";
+        nameTank2 = "FT102H";
       }
 
       const unit_value = await Unit(unit);
@@ -528,47 +540,8 @@ export default async function Forms2(
           // keywords: 'jsPDF, example, tutorial',
           creator: 'WGC Dashboard system',
         });
-
-        let fontLoaded = false;
-
-        // --- Alternative: Load font file at runtime and convert to Base64 ---
-        const fontUrl = '/fonts/thsarabunitalic.ttf'; // Path relative to the public folder
-        // const boldFontUrl = '/fonts/THSarabunNew-Bold.ttf'; // Example for bold
-  
-        const response = await fetch(fontUrl);
-
-        if (!response.ok) {
-          throw new Error(`ไม่สามารถโหลดไฟล์ฟอนต์ได้: ${response.statusText}`);
-        }
-
-        const fontBlob = await response.blob();
-  
-        // Convert Blob to Base64
-        const base64Font = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-              resolve(reader.result.split(',')[1]); // Get only the Base64 part
-            } else {
-              reject(new Error("ไม่สามารถอ่านไฟล์ฟอนต์เป็น Base64 ได้"));
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(fontBlob);
-        });
-  
-        if (!base64Font) {
-          throw new Error("การแปลงฟอนต์เป็น Base64 ล้มเหลว");
-        }
-  
-        // doc.addFileToVFS("/fonts/thsarabunitalic.ttf", base64Font);
-        doc.addFont("/fonts/thsarabun.ttf", "Sarabun", "normal");
-        doc.addFont("/fonts/thsarabunitalic.ttf", "Sarabun", "italic");
-        doc.addFont("/fonts/thsarabunbold.ttf", "Sarabun", "bold");
-        doc.addFont("/fonts/thsarabunbolditalic.ttf", "Sarabun", "bolditalic");
   
         doc.setFont("Sarabun", "normal");
-        fontLoaded = true;
         
         // --- Content ---
         const pageWidth = doc.internal.pageSize.getWidth();
@@ -578,12 +551,6 @@ export default async function Forms2(
         
         doc.setFontSize(16);
         // doc.setFontStyle('bold');
-
-        if (fontLoaded) {
-          doc.setFont("Sarabun", "bold"); // Use Sarabun for header if loaded
-        } else {
-          doc.setFont("helvetica", "bold"); // Fallback
-        }
 
         doc.rect(5, yPosition-12, (pageWidth - 2 * margin), 20);
 
@@ -596,14 +563,6 @@ export default async function Forms2(
 
         doc.text(`Report Mix ${plantName_}`, pageWidth / 2, yPosition, { align: 'center'});
         yPosition += lineHeight + 12;
-  
-        doc.setFontSize(10);
-
-        if (fontLoaded) {
-          doc.setFont("Sarabun", "normal"); // Use Sarabun for body text
-        } else {
-          doc.setFont("helvetica", "normal"); // Fallback
-        }
 
         // if (receiptOrder) {
     
@@ -620,7 +579,7 @@ export default async function Forms2(
           const rows5 = margin+170;
           const rows6 = margin+220;
 
-          doc.setFontSize(12);
+          doc.setFontSize(10);
 
           // doc.text(`Tank : ${tank}`, margin+10, yPosition);
           
@@ -629,14 +588,9 @@ export default async function Forms2(
           // doc.text(`Unit : ${unit_value}`, rows2, yPosition);
           // doc.text(`Data aggregation : ${aggregation_value}`, rows3, yPosition);
           // doc.text(`Period : ${period}`, rows3, yPosition);
-          doc.text(`Period : ${period_value}`, margin+10, yPosition);
-
-          // yPosition += lineHeight+5;
-
-          // doc.text(`Time Start : ${date_start}`, margin, yPosition);
-          // doc.text(`Time End : ${date_end}`, rows2, yPosition);
-          doc.text(`Time Start : ${start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
-          doc.text(`Time End : ${end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
+          doc.text(`Period : ${period_Display}`, margin+10, yPosition);
+          doc.text(`Time Start : ${start_timeDisplay == "--"?start_timeDisplay : start_timeDisplay.replace(/-/g, '/')}`, rows2, yPosition);
+          doc.text(`Time End : ${end_timeDisplay == "--"?end_timeDisplay : end_timeDisplay.replace(/-/g, '/')}`, rows3, yPosition);
 
           yPosition += lineHeight;
 
@@ -672,12 +626,12 @@ export default async function Forms2(
           // Define columns and rows for the table
           const tableColumn = [
             "วันที่", 
-            `ตัวเลขมิเตอร์ \n${plantName_} (L)`, 
-            "ตัวเลขมิเตอร์ \nนํ้า RO (L)", 
-            `ผลต่างมิเตอร์ระหว่างวัน \n${plantName_} (L)`, 
-            `ผลต่างมิเตอร์ระหว่างวัน \nนํ้า RO (L)`, 
+            `ตัวเลขมิเตอร์ (${nameTank1})\n${plantName_} (${C2}%) (L)`, 
+            `ตัวเลขมิเตอร์ (${nameTank2})\nนํ้า RO (L)`, 
+            `ผลต่างมิเตอร์ระหว่างวัน (${nameTank1}) ${plantName_} (${C2}%)\n (L)`, 
+            `ผลต่างมิเตอร์ระหว่างวัน (${nameTank2}) นํ้า RO\n (L)`, 
             `คงเหลือ Tank Mix\n(L)`, 
-            `ผลต่างในTank Mix\nระหว่างวัน (L)`, 
+            `ผลต่างใน Tank Mix\nระหว่างวัน (L)`, 
             `คงเหลือ Tank Store\n(L)`,
             `ผลต่างใน Tank Store\nระหว่างวัน (L)`
           ];
