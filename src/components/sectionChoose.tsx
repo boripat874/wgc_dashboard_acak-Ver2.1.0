@@ -89,7 +89,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
     <div className={`report-section bg-white dark:bg-gray-dark rounded-lg shadow-sm flex flex-col dark:border-gray-dark`}>
       
       {/* Title Bar */}
-      <div className={`report-title text-white p-2 font-bold text-center rounded-t-lg ${plantName === 'Alkaline' ? 'bg-[#C558C4] dark:bg-[#C558C4]' : plantName === 'Alkaline' ? 'bg-[#ED9832] dark:bg-[#ED9832]' : 'bg-[#EE4D55] dark:bg-[#EE4D55]'}`}>
+      <div className={`report-title text-white p-2 font-bold text-center rounded-t-lg ${plantName === 'Alkaline' ? 'bg-[#C558C4] dark:bg-[#C558C4]' : plantName === 'Acid' ? 'bg-[#ED9832] dark:bg-[#ED9832]' : 'bg-[#EE4D55] dark:bg-[#EE4D55]'}`}>
         <p>{title}</p>
       </div>
 
