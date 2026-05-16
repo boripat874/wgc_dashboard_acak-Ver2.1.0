@@ -40,6 +40,9 @@ interface Data {
   Total_ALL_FT_403: number;
   Total_ALL_FT_403_chemical: number;
   Total_ALL_FT_403_ro: number;
+  Total_ALL_FT_501: number;
+  Total_ALL_FT_501_chemical: number;
+  Total_ALL_FT_501_ro: number;
   Total_ALL_Used: number;
   Total_ALL_Used_chemical: number;
   Total_ALL_Used_ro: number;
@@ -51,7 +54,6 @@ var data: Data[] = [];
 
 
 function convertToCSV(
-
     data: Data[], 
     plantName_: string, 
     reportName_: string,
@@ -60,34 +62,25 @@ function convertToCSV(
     period_: string,
     date_start_: string,
     date_end_: string,
-    
-
 ): string {
 
-    // 1. แสดง Loading ทันที
-    Swal.fire({
-        title: 'กำลังเตรียมไฟล์ CSV...',
-        html: 'ระบบกำลังดึงข้อมูลและจัดทำรูปแบบไฟล์',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
+    // if (data.length === 0) {
+    //     return '';
+    // }
 
-    var C1 = 4;
-    var C2 = 50;
+    let C1 = 0;
+    let C2 = 0;
 
-    if(plantName_ === "NaOH"){
+    if (plantName_ === "NaOH") {
         C1 = 4;
         C2 = 50;
-    }else if(plantName_ === "HCl"){
+    } else if (plantName_ === "HCl") {
         C1 = 6;
         C2 = 35;
-
     }
 
-    const HEADERS: { [key in keyof Data]: string } = {
-
+    // 1. กำหนดโครงสร้างคอลัมน์พื้นฐาน (Base Headers) เพื่อใช้ควบคุมลำดับ (Order)
+    const baseHeaders: { [key: string]: string } = {
         dateTime: "วันที่",
         data_remaining_tank_Mix: `คงเหลือ Tank Mix ${plantName_} (${C1}%) (L)`,
         data_remaining_tank_Mix_chemical: `คงเหลือ Tank Mix คิดเป็น ${plantName_} (${C2}%) (L)`,
@@ -106,71 +99,73 @@ function convertToCSV(
         Total_ALL_FT_403: `ผลต่างมิเตอร์ระหว่างวัน PD3 ${plantName_} (${C1}%) (L)`,
         Total_ALL_FT_403_chemical: `ผลต่างมิเตอร์ระหว่างวัน PD3 คิดเป็น ${plantName_} (${C2}%) (L)`,
         Total_ALL_FT_403_ro: `ผลต่างมิเตอร์ระหว่างวัน PD3 คิดเป็น RO (L)`,
-        Total_ALL_Used: `Used total ${plantName_} (${C1}%) (L)`,
-        Total_ALL_Used_chemical: `Used total ${plantName_} (${C2}%) (L)`,
-        Total_ALL_Used_ro: `Used total RO (L)`
-        
     };
 
-    if (data.length === 0) {
-        return '';
+    // 2. ถ้าเป็น HCl ให้เพิ่ม FT_501 แทรกเข้าไปในตำแหน่งที่ต้องการ (ตัวอย่างนี้เอาไว้ก่อน Total_Used)
+    if (plantName_ === "HCl") {
+        baseHeaders.Total_ALL_FT_501 = `ผลต่างมิเตอร์ระหว่างวัน ES ${plantName_} (${C1}%) (L)`;
+        baseHeaders.Total_ALL_FT_501_chemical = `ผลต่างมิเตอร์ระหว่างวัน ES คิดเป็น ${plantName_} (${C2}%) (L)`;
+        baseHeaders.Total_ALL_FT_501_ro = `ผลต่างมิเตอร์ระหว่างวัน ES คิดเป็น RO (L)`;
     }
 
-    // 1. สร้างแถวหัวตารางจากค่าใน HEADERS
-    const headers = Object.keys(data[0]) as (keyof Data)[];
-    const headerRow = headers.map(key => HEADERS[key]).join(',');
+    // ฟิลด์ปิดท้ายสำหรับทุก Plant
+    baseHeaders.Total_ALL_Used = `Used total ${plantName_} (${C1}%) (L)`;
+    baseHeaders.Total_ALL_Used_chemical = `Used total ${plantName_} (${C2}%) (L)`;
+    baseHeaders.Total_ALL_Used_ro = `Used total RO (L)`;
 
-    // 2. สร้างแถวข้อมูลตามลำดับของ headers
+
+    // ฟังก์ชันช่วยสำหรับการครอบฟิลด์ด้วย "" และ escape เครื่องหมาย " (ป้องกัน CSV พัง)
+    const escapeCSV = (val: any) => {
+        if (val === null || val === undefined) return '""';
+        let str = String(val);
+        // ถ้ามีเครื่องหมาย " ให้เปลี่ยนเป็น "" ซ้อนกันตามมาตรฐาน CSV
+        if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+            str = `"${str.replace(/"/g, '""')}"`;
+        } else {
+            str = `"${str}"`; // ครอบไว้เพื่อความปลอดภัย
+        }
+        return str;
+    };
+
+    // 3. ดึง Keys ทั้งหมดจากที่เราจัดระเบียบไว้ เพื่อบังคับลำดับคอลัมน์ให้ตรงกันเสมอ
+    const targetKeys = Object.keys(baseHeaders) as (keyof Data)[];
+
+    // 4. สร้างแถวหัวตาราง (Header Row)
+    const headerRow = targetKeys.map(key => escapeCSV(baseHeaders[key as string])).join(',');
+
+    // 5. สร้างแถวข้อมูล (Data Rows) โดยวิ่งตามลำดับของ targetKeys
     const dataRows = data.map(row => 
-        headers.map(fieldName => {
-            // ดึงค่าตามชื่อคีย์เดิม
-            const value = row[fieldName];
-            return String(value);
-        }).join(',')
+        targetKeys.map(fieldName => escapeCSV(row[fieldName])).join(',')
     );
 
-    // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_}\nPeriod : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
+    // 6. จัดการ Metadata หัวไฟล์ (หลีกเลี่ยงการใช้เครื่องหมายจุลภาคในบรรทัด Metadata ตรงๆ)
+    const metadataHeader = [
+        escapeCSV(reportName_),
+        `Period : ${period_}, Time Start : ${date_start_}, Time End : ${date_end_}`
+    ].join('\n');
+
+    // 7. รวมทั้งหมดเข้าด้วยกัน
+    return [metadataHeader, headerRow, ...dataRows].join('\n');
 }
 
-const convertedData = (originalData: Data[]) => {
-    let i = 0;
-
-    // Use map and return the NEW array it creates
+const convertedData = (originalData: Data[], plantName_: string) => {
+    // ใช้ map เพื่อสร้างและคืนค่า Array ใหม่
     return originalData.map(item => { 
+        const result: any = {};
 
-        i++;
+        // วนลูปอ่านทุก Key ที่มีใน item อัตโนมัติ (ไม่ต้องเขียน if-else แยก plantName_ เลย)
+        for (const key in item) {
+            if (key === 'dateTime') {
+                // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
+                result[key] = String(item[key]).replaceAll(/-/g, '/');
+            } else {
+                // 2. แปลงฟิลด์อื่นๆ ทั้งหมดเป็น Number (ถ้าค่าเป็น null/undefined ให้ใส่ 0)
+                const value = item[key as keyof Data];
+                result[key] = value != null ? Number(value) : 0;
+            }
+        }
 
-        const originalDate = item.dateTime; // เช่น: '2025-01-20'
-        
-        // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
-        const newDate = originalDate.replaceAll(/-/g, '/'); 
-        
-        // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
-        // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
-        return { 
-            dateTime: newDate, 
-            data_remaining_tank_Mix: Number(item.data_remaining_tank_Mix),
-            data_remaining_tank_Mix_chemical: Number(item.data_remaining_tank_Mix_chemical),
-            data_remaining_tank_Mix_ro: Number(item.data_remaining_tank_Mix_ro),
-            tank_Mix_between_day: Number(item.tank_Mix_between_day),
-            data_remaining_tank_Store: Number(item.data_remaining_tank_Store),
-            data_remaining_tank_Store_chemical: Number(item.data_remaining_tank_Store_chemical),
-            data_remaining_tank_Store_ro: Number(item.data_remaining_tank_Store_ro),
-            tank_Store_between_day: Number(item.tank_Store_between_day) ,
-            Total_ALL_FT_401: Number(item.Total_ALL_FT_401) ,
-            Total_ALL_FT_401_chemical: Number(item.Total_ALL_FT_401_chemical) ,
-            Total_ALL_FT_401_ro: Number(item.Total_ALL_FT_401_ro) ,
-            Total_ALL_FT_402: Number(item.Total_ALL_FT_402) ,
-            Total_ALL_FT_402_chemical: Number(item.Total_ALL_FT_402_chemical) ,
-            Total_ALL_FT_402_ro: Number(item.Total_ALL_FT_402_ro) ,
-            Total_ALL_FT_403: Number(item.Total_ALL_FT_403) ,
-            Total_ALL_FT_403_chemical: Number(item.Total_ALL_FT_403_chemical) ,
-            Total_ALL_FT_403_ro: Number(item.Total_ALL_FT_403_ro) ,
-            Total_ALL_Used: Number(item.Total_ALL_Used) ,
-            Total_ALL_Used_chemical: Number(item.Total_ALL_Used_chemical) ,
-            Total_ALL_Used_ro: Number(item.Total_ALL_Used_ro)
-        };
+        return result;
     });
 };
 
@@ -199,8 +194,9 @@ export default async function Forms4csv(
 
     var apiUrl = ""
 
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
+    var period_ = "- Day"
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
           
     const geturl = async() => {
         
@@ -221,13 +217,14 @@ export default async function Forms4csv(
         
     apiUrl =  await geturl();
 
-    console.log("Fetching data from API:", `/api/${apiUrl}?unit=${unit}&aggregation=${aggregation}&period=${period}&date_start=${date_start}&date_end=${date_end}`);
+    // console.log("Fetching data from API:", `/api/${apiUrl}?unit=${unit}&aggregation=${aggregation}&period=${period}&date_start=${date_start}&date_end=${date_end}`);
     
     await fetcher(`/api/${apiUrl}?unit=${unit}&aggregation=${aggregation}&period=${period}&date_start=${date_start}&date_end=${date_end}`
     )
     .then((dataresponse) => {
 
         data = dataresponse.result;
+        period_ = dataresponse.period_Display;
         start_timeDisplay = dataresponse.start_timeDisplay;
         end_timeDisplay = dataresponse. end_timeDisplay;
         // console.log(data);
@@ -244,7 +241,7 @@ export default async function Forms4csv(
     const aggregation_value = await Aggregation(aggregation);
     const period_value = await CheckPeriod(period);
 
-    const datatable = convertedData(data);
+    const datatable = convertedData(data, plantName_);
 
     // console.log("start_timeDisplay :", start_timeDisplay);
     // console.log("end_timeDisplay :", end_timeDisplay);
@@ -257,12 +254,12 @@ export default async function Forms4csv(
         const filename: string = `Report Used ${plantName_}.csv`;
 
         const csvString = convertToCSV(
-            datatable, 
+            datatable as any, 
             plantName_,
             "Report Used "+plantName_,
             unit_value,
             aggregation_value,
-            period_value,
+            period_,
             start_timeDisplay,
             end_timeDisplay
         );

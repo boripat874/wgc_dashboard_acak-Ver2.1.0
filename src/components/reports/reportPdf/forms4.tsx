@@ -39,6 +39,9 @@ interface Data {
   Total_ALL_FT_403: number;
   Total_ALL_FT_403_chemical: number;
   Total_ALL_FT_403_ro: number;
+  Total_ALL_FT_501: number;
+  Total_ALL_FT_501_chemical: number;
+  Total_ALL_FT_501_ro: number;
   Total_ALL_Used: number;
   Total_ALL_Used_chemical: number;
   Total_ALL_Used_ro: number;
@@ -200,6 +203,9 @@ export default async function Forms4(
             Total_ALL_FT_403: Number(item.Total_ALL_FT_403).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ,
             Total_ALL_FT_403_chemical: Number(item.Total_ALL_FT_403_chemical).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ,
             Total_ALL_FT_403_ro: Number(item.Total_ALL_FT_403_ro).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ,
+            Total_ALL_FT_501: Number(item.Total_ALL_FT_501).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            Total_ALL_FT_501_chemical: Number(item.Total_ALL_FT_501_chemical).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            Total_ALL_FT_501_ro: Number(item.Total_ALL_FT_501_ro).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             Total_ALL_Used: Number(item.Total_ALL_Used).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ,
             Total_ALL_Used_chemical: Number(item.Total_ALL_Used_chemical).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ,
             Total_ALL_Used_ro: Number(item.Total_ALL_Used_ro).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -245,7 +251,8 @@ export default async function Forms4(
             date_time: newDate || "-/-", 
             pd1_total: Number(item.Total_ALL_FT_401) ,
             pd2_total: Number(item.Total_ALL_FT_402) ,
-            pd3_total: Number(item.Total_ALL_FT_403) 
+            pd3_total: Number(item.Total_ALL_FT_403) ,
+            es_total: Number(item.Total_ALL_FT_501) ,
           }; 
 
         });
@@ -294,7 +301,9 @@ export default async function Forms4(
                     displayName = `PD2 Total (${C1}%)`;
                 } else if (entry.value === "pd3_total") {
                     displayName = `PD3 Total (${C1}%)`;
-                } else {
+                } else if (entry.value === "es_total") {
+                    displayName = `ES Total (${C1}%)`;
+                } else{
                     displayName = "--";
                 }
 
@@ -339,6 +348,7 @@ export default async function Forms4(
               <Bar dataKey="pd1_total" fill={`#6FD195`} label={<CustomBarLabel />}></Bar>
               <Bar dataKey="pd2_total" fill={`#63C1C1`} label={<CustomBarLabel />}></Bar>
               <Bar dataKey="pd3_total" fill={`#D8A66B`} label={<CustomBarLabel />}></Bar>
+              <Bar dataKey="es_total" fill={`#D8A66B`} label={<CustomBarLabel />}></Bar>
               
               <Tooltip />
               
@@ -661,44 +671,155 @@ export default async function Forms4(
           //   { id: 4, date: "2025/08/11", timeStart: "00:00", timeStop: "23:59", value: 2780 },
           //   { id: 5, date: "2025/08/12", timeStart: "00:00", timeStop: "23:59", value: 1890 },
           // ];
+          var headerRow1 = [] as any;
+          var headerRow2 = [] as any;
+          var tableRows = [] as any;
 
-          // หัวตารางแถวที่ 1: กำหนดหัวข้อหลักและการรวมแถว (rowSpan)
-          const headerRow1 = [
-            { content: 'วันที่', rowSpan: 2}, // รวม 2 แถว
-            { content: 'คงเหลือ Tank Mix (L)', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `ผลต่างใน Tank Mix\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
-            { content: 'คงเหลือ Tank Store (L)', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `ผลต่างใน Tank Store\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
-            { content: 'ผลต่างมิเตอร์ระหว่างวัน PD1', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: 'ผลต่างมิเตอร์ระหว่างวัน PD2', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: 'ผลต่างมิเตอร์ระหว่างวัน PD3', colSpan: 3}, // รวม 3 คอลัมน์
-            { content: `Uesd total ${plantName_}\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
-            { content: `Uesd total ${plantName_}\n(${C2}%) (L)`, rowSpan: 2}, // รวม 2 แถว
-            { content: `Uesd total RO\n(L)`, rowSpan: 2}, // รวม 2 แถว
-          ];
+          
+          if(plantName_ === "NaOH"){
 
-          // หัวตารางแถวที่ 2: กำหนดหัวข้อย่อย
-          const headerRow2 = [
-            { content: `${plantName_}\n(${C1}%) (L)`}, 
-            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
-            { content: `คิดเป็น RO\n(L)`},
-            { content: `${plantName_}\n(${C1}%) (L)`}, 
-            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
-            { content: `คิดเป็น RO\n(L)`},
-            { content: `${plantName_}\n(${C1}%) (L)`}, 
-            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
-            { content: `คิดเป็น RO\n(L)`},
-            { content: `${plantName_}\n(${C1}%) (L)`}, 
-            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
-            { content: `คิดเป็น RO\n(L)`},
-            { content: `${plantName_}\n(${C1}%) (L)`}, 
-            { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
-            { content: `คิดเป็น RO\n(L)`},
-            // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD1
-            // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD2
-            // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD3
+            // หัวตารางแถวที่ 1: กำหนดหัวข้อหลักและการรวมแถว (rowSpan)
+            headerRow1 = [
+              { content: 'วันที่', rowSpan: 2}, // รวม 2 แถว
+              { content: 'คงเหลือ Tank Mix (L)', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `ผลต่างใน Tank Mix\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: 'คงเหลือ Tank Store (L)', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `ผลต่างใน Tank Store\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD1', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD2', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD3', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `Uesd total ${plantName_}\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: `Uesd total ${plantName_}\n(${C2}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: `Uesd total RO\n(L)`, rowSpan: 2}, // รวม 2 แถว
+            ];
 
-          ];
+
+            // หัวตารางแถวที่ 2: กำหนดหัวข้อย่อย
+            headerRow2 = [
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD1
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD2
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD3
+
+            ];
+
+            // ปรับ `tableRows` ให้ตรงกับหัวตาราง 17 คอลัมน์ (ถ้ามี Number) หรือ 16 คอลัมน์ (ถ้าไม่มี Number)
+            // สมมติว่าใช้ 16 คอลัมน์ตามที่คุณเขียนมา และตัด "Number" ออกจาก `tableColumn` เดิม
+            tableRows = datatable.map((item) => [
+              item.dateTime,
+              item.data_remaining_tank_Mix,
+              item.data_remaining_tank_Mix_chemical ,
+              item.data_remaining_tank_Mix_ro ,
+              item.tank_Mix_between_day ,
+              item.data_remaining_tank_Store ,
+              item.data_remaining_tank_Store_chemical ,
+              item.data_remaining_tank_Store_ro ,
+              item.tank_Store_between_day ,
+              item.Total_ALL_FT_401 ,
+              item.Total_ALL_FT_401_chemical ,
+              item.Total_ALL_FT_401_ro ,
+              item.Total_ALL_FT_402 ,
+              item.Total_ALL_FT_402_chemical ,
+              item.Total_ALL_FT_402_ro ,
+              item.Total_ALL_FT_403 ,
+              item.Total_ALL_FT_403_chemical ,
+              item.Total_ALL_FT_403_ro ,
+              item.Total_ALL_Used ,
+              item.Total_ALL_Used_chemical ,
+              item.Total_ALL_Used_ro
+            ]);
+
+          }else{
+
+            // หัวตารางแถวที่ 1: กำหนดหัวข้อหลักและการรวมแถว (rowSpan)
+            headerRow1 = [
+              { content: 'วันที่', rowSpan: 2}, // รวม 2 แถว
+              { content: 'คงเหลือ Tank Mix (L)', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `ผลต่างใน Tank Mix\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: 'คงเหลือ Tank Store (L)', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `ผลต่างใน Tank Store\nระหว่างวัน\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD1', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD2', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน PD3', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: 'ผลต่างมิเตอร์ระหว่างวัน ES', colSpan: 3}, // รวม 3 คอลัมน์
+              { content: `Uesd total ${plantName_}\n(${C1}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: `Uesd total ${plantName_}\n(${C2}%) (L)`, rowSpan: 2}, // รวม 2 แถว
+              { content: `Uesd total RO\n(L)`, rowSpan: 2}, // รวม 2 แถว
+            ];
+
+
+            // หัวตารางแถวที่ 2: กำหนดหัวข้อย่อย
+            headerRow2 = [
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              { content: `${plantName_}\n(${C1}%) (L)`}, 
+              { content: `คิดเป็น ${plantName_}\n(${C2}%) (L)`},
+              { content: `คิดเป็น RO\n(L)`},
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD1
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD2
+              // `Total \n(${unit_value})`, `${plantName_} \n(${unit_value})`, `RO \n(${unit_value})`, // ใต้ PD3
+
+            ];
+
+            // ปรับ `tableRows` ให้ตรงกับหัวตาราง 17 คอลัมน์ (ถ้ามี Number) หรือ 16 คอลัมน์ (ถ้าไม่มี Number)
+            // สมมติว่าใช้ 16 คอลัมน์ตามที่คุณเขียนมา และตัด "Number" ออกจาก `tableColumn` เดิม
+            tableRows = datatable.map((item) => [
+              item.dateTime,
+              item.data_remaining_tank_Mix,
+              item.data_remaining_tank_Mix_chemical ,
+              item.data_remaining_tank_Mix_ro ,
+              item.tank_Mix_between_day ,
+              item.data_remaining_tank_Store ,
+              item.data_remaining_tank_Store_chemical ,
+              item.data_remaining_tank_Store_ro ,
+              item.tank_Store_between_day ,
+              item.Total_ALL_FT_401 ,
+              item.Total_ALL_FT_401_chemical ,
+              item.Total_ALL_FT_401_ro ,
+              item.Total_ALL_FT_402 ,
+              item.Total_ALL_FT_402_chemical ,
+              item.Total_ALL_FT_402_ro ,
+              item.Total_ALL_FT_403 ,
+              item.Total_ALL_FT_403_chemical ,
+              item.Total_ALL_FT_403_ro ,
+              item.Total_ALL_FT_501 ,
+              item.Total_ALL_FT_501_chemical ,
+              item.Total_ALL_FT_501_ro ,
+              item.Total_ALL_Used ,
+              item.Total_ALL_Used_chemical ,
+              item.Total_ALL_Used_ro
+            ]);
+
+          }
+
+          
 
           // แถวข้อมูล (tableRows) - ใช้ตามที่คุณกำหนดไว้ แต่ต้องตรวจสอบการจัดเรียงข้อมูลให้ตรงกับหัวตารางใหม่
           // **ข้อควรระวัง:** `tableRows` ที่คุณสร้างไว้มี 16 คอลัมน์ (นับจาก array items) ซึ่งไม่ตรงกับรูปภาพที่มี 17 คอลัมน์ (17 หัวข้อในแถวที่ 2)
@@ -724,31 +845,7 @@ export default async function Forms4(
           */
           // ***ขาดคอลัมน์ "Number" ไปในโค้ดของคุณ*** หากต้องการ "Number" ต้องเพิ่มเข้าไปใน `tableRows` และ `headerRow1`
 
-          // ปรับ `tableRows` ให้ตรงกับหัวตาราง 17 คอลัมน์ (ถ้ามี Number) หรือ 16 คอลัมน์ (ถ้าไม่มี Number)
-          // สมมติว่าใช้ 16 คอลัมน์ตามที่คุณเขียนมา และตัด "Number" ออกจาก `tableColumn` เดิม
-          const tableRows = datatable.map((item) => [
-              item.dateTime,
-              item.data_remaining_tank_Mix,
-              item.data_remaining_tank_Mix_chemical ,
-              item.data_remaining_tank_Mix_ro ,
-              item.tank_Mix_between_day ,
-              item.data_remaining_tank_Store ,
-              item.data_remaining_tank_Store_chemical ,
-              item.data_remaining_tank_Store_ro ,
-              item.tank_Store_between_day ,
-              item.Total_ALL_FT_401 ,
-              item.Total_ALL_FT_401_chemical ,
-              item.Total_ALL_FT_401_ro ,
-              item.Total_ALL_FT_402 ,
-              item.Total_ALL_FT_402_chemical ,
-              item.Total_ALL_FT_402_ro ,
-              item.Total_ALL_FT_403 ,
-              item.Total_ALL_FT_403_chemical ,
-              item.Total_ALL_FT_403_ro ,
-              item.Total_ALL_Used ,
-              item.Total_ALL_Used_chemical ,
-              item.Total_ALL_Used_ro
-          ]);
+          
 
 
           // Add the table to the document

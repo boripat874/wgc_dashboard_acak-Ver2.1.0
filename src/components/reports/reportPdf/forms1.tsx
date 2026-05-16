@@ -125,7 +125,7 @@ export default async function Forms1(
 
     const aggregation_value = await Aggregation(aggregation);
 
-    console.log("unit_value >>",unit);
+    // console.log("unit_value >>",unit);
 
     const unit_value = await Unit(unit);
 
@@ -227,7 +227,7 @@ export default async function Forms1(
           return { 
             ...item, 
             date_time: newDate , 
-            value: Number(item.Fill_between_day)
+            value: Number(item.data_Fill)
           }; 
 
         });
@@ -488,10 +488,7 @@ export default async function Forms1(
         logging: false,
       });
 
-
-
       const linechartImage = linecanvas.toDataURL('image/png');
-
 
       lineroot.unmount(); // Unmount the component first
       document.body.removeChild(lineChartContainer);
@@ -707,7 +704,7 @@ export default async function Forms1(
             if (i == 1) {
               // doc.rect(5, startyPosition, (pageWidth - 2 * margin), yPosition);
               const W = (pageWidth - 2 * margin);
-              const H = yPosition;
+              const H = yPosition-4;
               const X_start = 5;
               const Y_start = startyPosition;
               const X_end = X_start + W;

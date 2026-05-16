@@ -385,7 +385,7 @@ export const reporthcirecieved = async (c) => {
         const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
         // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-        const rows = await db('ScadaDataLogAlkaline')
+        const rows = await db('ScadaDataLogAcid')
             .select("*")
             .where('UnixTimestamp', '>=', prevStartSec)
             .where('UnixTimestamp', '<=', prevEndSec)
@@ -459,8 +459,9 @@ export const reporthcirecieved = async (c) => {
       const hci_results = hci_promises.filter(Boolean);
 
       resolve({ 
-        start_timeDisplay: format(timestamp.startTimestamp * 1000, 'yyyy-MM-dd'),
-        end_timeDisplay: format(timestamp.endTimestamp * 1000, 'yyyy-MM-dd'),
+        period_Display: `${hci_results.length == 0 ? "-" : hci_results.length} Day`,
+        start_timeDisplay: hci_results[0]?.dateTime || "--",
+        end_timeDisplay: hci_results[hci_results.length - 1]?.dateTime || '--',
         total: hci_results.length,
         result: hci_results 
         // message: 'Hello, Smart Automation Thailand!',
@@ -607,8 +608,9 @@ export const reporthcimixed = async (c) => {
 
       resolve({ 
 
-        start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
-        end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+        period_Display: `${hci_results.length == 0 ? "-" : hci_results.length} Day`,
+        start_timeDisplay: hci_results[0]?.dateTime || "--",
+        end_timeDisplay: hci_results[hci_results.length - 1]?.dateTime || '--',
         total: hci_results.length,
         result: hci_results 
         // message: 'Hello, Smart Automation Thailand!',
@@ -696,7 +698,8 @@ export const reporthciconsumed = async (c) => {
           const constant_tank3_Mix = 0.8;
           const constant_tank4_Store = 1.3;
 
-          const constant_chemical = 4;
+          const C1 = 4;
+          const C2 = 50;
 
           const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -711,11 +714,12 @@ export const reporthciconsumed = async (c) => {
           item.data_remaining_tank_Mix = data_remaining_tank_Mix;
 
           // col C
-          const data_remaining_tank_Mix_chemical = (data_remaining_tank_Mix * constant_chemical) / 50;
+          const data_remaining_tank_Mix_chemical = (data_remaining_tank_Mix * C1) / C2;
           item.data_remaining_tank_Mix_chemical = data_remaining_tank_Mix_chemical;
 
           // col D
-          item.data_remaining_tank_Mix_ro = data_remaining_tank_Mix - data_remaining_tank_Mix_chemical;
+          const data_remaining_tank_Mix_ro = data_remaining_tank_Mix - data_remaining_tank_Mix_chemical;
+          item.data_remaining_tank_Mix_ro = data_remaining_tank_Mix_ro;
 
           // col E
           const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301H || 0;
@@ -730,12 +734,13 @@ export const reporthciconsumed = async (c) => {
           item.data_remaining_tank_Store = data_remaining_tank_Store;
 
           // col G
-          const data_remaining_tank_Store_chemical = (data_remaining_tank_Store * constant_chemical) / 50;
+          const data_remaining_tank_Store_chemical = (data_remaining_tank_Store * C1) / C2;
           item.data_remaining_tank_Store_chemical = data_remaining_tank_Store_chemical;
 
           // col H
-          item.data_remaining_tank_Store_ro = data_remaining_tank_Store - data_remaining_tank_Store_chemical;
-
+          const data_remaining_tank_Store_ro = data_remaining_tank_Store - data_remaining_tank_Store_chemical;
+          item.data_remaining_tank_Store_ro = data_remaining_tank_Store_ro;
+ 
           // col I
           const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401H || 0);
           const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + constant_tank4_Store) * 1000;
@@ -743,12 +748,14 @@ export const reporthciconsumed = async (c) => {
           item.tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
           // col J
-          const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+          const Total_ALL_FT_401_today = (item.Aka_Total_ALL_FT_401H || 0);
+          const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401H || 0);
           
+          const Total_ALL_FT_401 = Total_ALL_FT_401_today - Total_ALL_FT_401_lastday;
           item.Total_ALL_FT_401 = Total_ALL_FT_401;
 
           // col K
-          const Total_ALL_FT_401_chemical = (Total_ALL_FT_401 * constant_chemical) / 50;
+          const Total_ALL_FT_401_chemical = (Total_ALL_FT_401 * C1) / C2;
           item.Total_ALL_FT_401_chemical = Total_ALL_FT_401_chemical;
 
           // col L
@@ -756,12 +763,15 @@ export const reporthciconsumed = async (c) => {
           item.Total_ALL_FT_401_ro = Total_ALL_FT_401_ro;
           
           // col M
-          const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+          const Total_ALL_FT_402_today = (item.Aka_Total_ALL_FT_402H || 0);
+          const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402H || 0);
+
+          const Total_ALL_FT_402 = Total_ALL_FT_402_today - Total_ALL_FT_402_lastday;
 
           item.Total_ALL_FT_402 = Total_ALL_FT_402;
 
           // col N
-          const Total_ALL_FT_402_chemical = (Total_ALL_FT_402 * constant_chemical) / 50;
+          const Total_ALL_FT_402_chemical = (Total_ALL_FT_402 * C1) / C2;
           item.Total_ALL_FT_402_chemical = Total_ALL_FT_402_chemical;
 
           // col O
@@ -769,12 +779,15 @@ export const reporthciconsumed = async (c) => {
           item.Total_ALL_FT_402_ro = Total_ALL_FT_402_ro;
 
           // col P
-          const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+          const Total_ALL_FT_403_today = (item.Aka_Total_ALL_FT_403H || 0);
+          const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403H || 0);
+
+          const Total_ALL_FT_403 = Total_ALL_FT_403_today - Total_ALL_FT_403_lastday;
 
           item.Total_ALL_FT_403 = Total_ALL_FT_403;
 
           // col Q
-          const Total_ALL_FT_403_chemical = (Total_ALL_FT_403 * constant_chemical) / 50;
+          const Total_ALL_FT_403_chemical = (Total_ALL_FT_403 * C1) / C2;
           item.Total_ALL_FT_403_chemical = Total_ALL_FT_403_chemical;
 
           // col R
@@ -782,13 +795,51 @@ export const reporthciconsumed = async (c) => {
           item.Total_ALL_FT_403_ro = Total_ALL_FT_403_ro;
 
           // col S
-          item.Total_ALL_Used = (Total_ALL_FT_401 + Total_ALL_FT_402 + Total_ALL_FT_403);
+          const Total_ALL_FT_501_today = (item.Aka_Total_ALL_FT_501H || 0);
+          const Total_ALL_FT_501_lastday = (rows.Aka_Total_ALL_FT_501H || 0);
+
+          const Total_ALL_FT_501 = Total_ALL_FT_501_today - Total_ALL_FT_501_lastday;
+
+          item.Total_ALL_FT_501 = Total_ALL_FT_501;
 
           // col T
-          item.Total_ALL_Used_chemical = (Total_ALL_FT_401_chemical + Total_ALL_FT_402_chemical + Total_ALL_FT_403_chemical);
+          const Total_ALL_FT_501_chemical = (Total_ALL_FT_501 * C1) / C2;
+          item.Total_ALL_FT_501_chemical = Total_ALL_FT_501_chemical;
 
           // col U
-          item.Total_ALL_Used_ro = (Total_ALL_FT_401_ro + Total_ALL_FT_402_ro + Total_ALL_FT_403_ro);
+          const Total_ALL_FT_501_ro = Total_ALL_FT_501 - Total_ALL_FT_501_chemical;
+          item.Total_ALL_FT_501_ro = Total_ALL_FT_501_ro;
+
+          // col V
+          item.Total_ALL_Used = (
+            data_remaining_tank_Mix + 
+            data_remaining_tank_Store + 
+            Total_ALL_FT_401 + 
+            Total_ALL_FT_402 + 
+            Total_ALL_FT_403 + 
+            Total_ALL_FT_501
+          );
+
+          // col W
+          item.Total_ALL_Used_chemical = (
+            data_remaining_tank_Mix_chemical + 
+            data_remaining_tank_Store_chemical + 
+            Total_ALL_FT_401_chemical + 
+            Total_ALL_FT_402_chemical + 
+            Total_ALL_FT_403_chemical + 
+            Total_ALL_FT_501_chemical 
+
+          );
+
+          // col X
+          item.Total_ALL_Used_ro = (
+            data_remaining_tank_Mix_ro + 
+            data_remaining_tank_Store_ro + 
+            Total_ALL_FT_401_ro + 
+            Total_ALL_FT_402_ro + 
+            Total_ALL_FT_403_ro +
+            Total_ALL_FT_501_ro
+          );
 
           // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
           return {
@@ -803,8 +854,9 @@ export const reporthciconsumed = async (c) => {
 
     resolve({ 
 
-      start_timeDisplay: format(timestamp.startTimestamp*1000, 'yyyy-MM-dd'),
-      end_timeDisplay: format(timestamp.endTimestamp*1000, 'yyyy-MM-dd'),
+      period_Display: `${hci_results.length == 0 ? "-" : hci_results.length} Day`,
+      start_timeDisplay: hci_results[0]?.dateTime || "--",
+      end_timeDisplay: hci_results[hci_results.length - 1]?.dateTime || '--',
       total: hci_results.length,
       result: hci_results 
       // message: 'Hello, Smart Automation Thailand!',

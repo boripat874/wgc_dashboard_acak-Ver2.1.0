@@ -76,27 +76,45 @@ async function convertToCSV(
         Fill_between_day: `ผลต่าง ${plantName_} (${C2}%) ใน Tank ระหว่างวัน (kg)`,
         data_Fill: `รับเข้าใหม่ (kg)`
     };
- 
-    if (data.length === 0) {
-        return '';
-    }
 
     // 1. สร้างแถวหัวตารางจากค่าใน HEADERS
-    const headers = Object.keys(data[0]) as (keyof Data)[];
-    const headerRow = headers.map(key => HEADERS[key]).join(',');
+    // const headers = Object.keys(data[0]) as (keyof Data)[];
+    // const headerRow = headers.map(key => HEADERS[key]).join(',');
 
-    // 2. สร้างแถวข้อมูลตามลำดับของ headers
-    const dataRows = data.map(row => 
+    const headerRow = Object.values(HEADERS).join(',');
+
+    let tableRows = [] as any;
+
+
+    if (data.length === 0) {
+        // return '';
+        // 2. สร้างแถวข้อมูลตามลำดับของ headers
+        // const dataRows = data.map(row => 
+            
+        //     headers.map(fieldName => {
+        //         // ดึงค่าตามชื่อคีย์เดิม
+        //         const value = row[fieldName];
+        //         return String(value);
+        //     }).join(',')
+        // );
+        data.forEach((item) => {
+
+            tableRows.push([
+
+                item.dateTime, // วันที่
+                item.density,
+                item.data_remaining_fill,
+                item.data_remaining_fill_total,
+                item.Fill_between_day,
+                item.data_Fill
+            ]);
+        });
         
-        headers.map(fieldName => {
-            // ดึงค่าตามชื่อคีย์เดิม
-            const value = row[fieldName];
-            return String(value);
-        }).join(',')
-    );
+    }
+
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_}\nPeriod : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...dataRows].join('\n');
+    return [`${reportName_}\nPeriod : ${period_},Time Start : ${date_start_== "--"?date_start_.replace(/-/g, '/'): date_start_},Time End : ${date_end_ == "--"?date_end_.replace(/-/g, '/'):date_end_}`,headerRow, ...tableRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -138,8 +156,9 @@ export default async function Forms1csv(
 
     var apiUrl = "reportnaohrecieved"
 
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
+    var period_ = "- Day"
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
     
     const geturl = async() => {
 
@@ -160,6 +179,7 @@ export default async function Forms1csv(
     .then((datareponse) => {
         
         data = datareponse.result;
+        period_ = datareponse.period_Display;
         start_timeDisplay = datareponse.start_timeDisplay;
         end_timeDisplay = datareponse.end_timeDisplay;
         // console.log(data);
@@ -208,7 +228,7 @@ export default async function Forms1csv(
             unit_value,
             tank,
             aggregation_value,
-            period_value,
+            period_,
             start_timeDisplay,
             end_timeDisplay
         );

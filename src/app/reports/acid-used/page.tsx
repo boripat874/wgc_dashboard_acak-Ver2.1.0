@@ -47,7 +47,7 @@ export default function Page(props: Props) {
             return () => clearTimeout(timer);
         }
 
-        if (acidUsedUnit !== "--" && acidUsedAgg !== "--" && acidUsedPeriod !== "--") {
+        if (acidUsedPeriod !== "--") {
 
             Forms4(renderReport, "Acid", acidUsedPlant, acidUsedUnit, "4", acidUsedAgg, acidUsedPeriod, acidUsedStart, acidUsedEnd)
         }

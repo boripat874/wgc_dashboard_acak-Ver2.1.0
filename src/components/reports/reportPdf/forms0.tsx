@@ -488,7 +488,7 @@ export default async function Forms0(
             if (i == 1) {
               // doc.rect(5, startyPosition, (pageWidth - 2 * margin), yPosition);
               const W = (pageWidth - 2 * margin);
-              const H = yPosition;
+              const H = yPosition-5;
               const X_start = 5;
               const Y_start = startyPosition;
               const X_end = X_start + W;

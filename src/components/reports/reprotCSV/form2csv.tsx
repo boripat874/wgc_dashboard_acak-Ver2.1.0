@@ -86,25 +86,44 @@ function convertToCSV(
         tank_Store_between_day: `ผลต่างใน Tank Store ระหว่างวัน (L)`,
     };
 
+    // 1. สร้างแถวหัวตารางจากค่าใน HEADERS
+    // const headers = Object.keys(data[0]) as (keyof Data)[];
+    // const headerRow = headers.map(key => HEADERS[key]).join(',');
+    const headerRow = Object.values(HEADERS).join(',');
+
+    let tableRows = [] as any;
+
     if (data.length === 0) {
-        return '';
+        // return '';
+        data.forEach((item) => {
+
+            tableRows.push([
+
+                item.dateTime, // วันที่
+                item.Total_ALL_FT_101,
+                item.Total_ALL_FT_201,
+                item.chemical_between_day,
+                item.ro_between_day,
+                item.data_remaining_tank_Mix,
+                item.tank_Mix_between_day,
+                item.data_remaining_tank_Store,
+                item.tank_Store_between_day
+
+            ]);
+        });
     }
 
-    // 1. สร้างแถวหัวตารางจากค่าใน HEADERS
-    const headers = Object.keys(data[0]) as (keyof Data)[];
-    const headerRow = headers.map(key => HEADERS[key]).join(',');
-
     // 2. สร้างแถวข้อมูลตามลำดับของ headers
-    const dataRows = data.map(row => 
-        headers.map(fieldName => {
-            // ดึงค่าตามชื่อคีย์เดิม
-            const value = row[fieldName];
-            return String(value);
-        }).join(',')
-    );
+    // const dataRows = data.map(row => 
+    //     headers.map(fieldName => {
+    //         // ดึงค่าตามชื่อคีย์เดิม
+    //         const value = row[fieldName];
+    //         return String(value);
+    //     }).join(',')
+    // );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_}\nTime Start : ${date_start_.replace(/-/g, '/')},Time End : ${date_end_.replace(/-/g, '/')}`,headerRow, ...dataRows].join('\n');
+    return [`${reportName_}\nperiod : ${period_},Time Start : ${date_start_== "--"?date_start_.replace(/-/g, '/'): date_start_},Time End : ${date_end_ == "--"?date_end_.replace(/-/g, '/'):date_end_}`,headerRow, ...tableRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -147,9 +166,9 @@ export default async function Forms2csv(
 {
 
     var apiUrl = "";
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
-
+    var period_ = "- Day"
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
 
     const geturl = async() => {
     
@@ -169,6 +188,7 @@ export default async function Forms2csv(
     )
     .then((dataresponse) => {
         data = dataresponse.result;
+        period_ = dataresponse.period_Display;
         start_timeDisplay = dataresponse.start_timeDisplay;
         end_timeDisplay = dataresponse.end_timeDisplay;
         // console.log(data);
@@ -178,7 +198,6 @@ export default async function Forms2csv(
         console.error("Failed to fetch data:", error);
         // return;
     });
-
 
     try{
 
@@ -197,7 +216,7 @@ export default async function Forms2csv(
 
         const unit_value = await Unit(unit);
         const aggregation_value = await Aggregation(aggregation);
-        const period_value = await CheckPeriod(period);
+        // const period_value = await CheckPeriod(period);
 
         const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -209,7 +228,7 @@ export default async function Forms2csv(
             "Report Mix "+plantName_,
             unit_value,
             aggregation_value,
-            period_value,
+            period_,
             start_timeDisplay,
             end_timeDisplay
         );

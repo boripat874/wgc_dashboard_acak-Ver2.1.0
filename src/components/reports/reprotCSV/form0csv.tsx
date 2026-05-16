@@ -121,74 +121,77 @@ async function convertToCSV(
         Total_ALL_FT_403_N: 'ผลต่างมิเตอร์ ทั้งวัน (L)'
     };
  
-    if (data.length === 0) {
-        return '';
-    }
-
     // 1. สร้างแถวหัวตารางจากค่าใน HEADERS
-    const headers = Object.keys(data[0]) as (keyof Data)[];
+    // const headers = Object.keys(data[0]) as (keyof Data)[];
 
     // console.log(headers);
 
-    const headerRow = headers.map(key => HEADERS[key]).join(',');
+    // const headerRow = headers.map(key => HEADERS[key]).join(',');
+    const headerRow = Object.values(HEADERS).join(',');
 
     // console.log("headers >>>",headers);
 
     let tableRows = [] as any;
 
-    data.forEach((item) => {
-            // --- ส่วนของ กรดเกลือ (N) ---
-            // แถวแรกของกรดเกลือ จะมีข้อมูลหลัก + ข้อมูล PD1
+    if (data.length === 0) {
 
-            tableRows.push([
-                item.dateTime, // วันที่
-                "กรดเกลือ",    // รายการ
-                item.density_N, // Density
-                item.data_remaining_fill_N,
-                item.data_remaining_fill_total_N,
-                item.Fill_between_day_N,
-                item.data_Fill_N,
-                item.Total_ALL_FT_101_N,
-                item.Total_ALL_FT_201_N,
-                item.chemical_between_day_N,
-                item.ro_between_day_N,
-                item.data_remaining_tank_Mix_N,
-                item.tank_Mix_between_day_N,
-                item.data_remaining_tank_Store_N,
-                item.tank_Store_between_day_N,
-                "PD1", item.Total_ALL_FT_401_N, item.pd1_between_day_N, 
-                "", // ผลต่างมิเตอร์ทั้งวัน (ว่างไว้รอแถวสุดท้าย)
-            ]);
-            tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "PD2", item.Total_ALL_FT_402_N, item.pd2_between_day_N]);
-            tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "PD3", item.Total_ALL_FT_403_N, item.pd3_between_day_N, item.totalAll_use_between_day_N]);
+        // return '';
+        data.forEach((item) => {
+                // --- ส่วนของ กรดเกลือ (N) ---
+                // แถวแรกของกรดเกลือ จะมีข้อมูลหลัก + ข้อมูล PD1
+    
+                tableRows.push([
+                    item.dateTime, // วันที่
+                    "กรดเกลือ",    // รายการ
+                    item.density_N, // Density
+                    item.data_remaining_fill_N,
+                    item.data_remaining_fill_total_N,
+                    item.Fill_between_day_N,
+                    item.data_Fill_N,
+                    item.Total_ALL_FT_101_N,
+                    item.Total_ALL_FT_201_N,
+                    item.chemical_between_day_N,
+                    item.ro_between_day_N,
+                    item.data_remaining_tank_Mix_N,
+                    item.tank_Mix_between_day_N,
+                    item.data_remaining_tank_Store_N,
+                    item.tank_Store_between_day_N,
+                    "PD1", item.Total_ALL_FT_401_N, item.pd1_between_day_N, 
+                    "", // ผลต่างมิเตอร์ทั้งวัน (ว่างไว้รอแถวสุดท้าย)
+                ]);
+                tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "PD2", item.Total_ALL_FT_402_N, item.pd2_between_day_N]);
+                tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "PD3", item.Total_ALL_FT_403_N, item.pd3_between_day_N, item.totalAll_use_between_day_N]);
+    
+                // // --- ส่วนของ โซดาไฟ (H) ---
+                // // ทำเหมือนกัน แต่เพิ่มแถว ES เข้าไปด้วยตามรูป
+                
+                tableRows.push([
+                    item.dateTime,
+                    "โซดาไฟ",
+                    item.density_H,
+                    item.data_remaining_fill_H,
+                    item.data_remaining_fill_total_H,
+                    item.Fill_between_day_H,
+                    item.data_Fill_H,
+                    item.Total_ALL_FT_101_H,
+                    item.Total_ALL_FT_201_H,
+                    item.chemical_between_day_H,
+                    item.ro_between_day_H,
+                    item.data_remaining_tank_Mix_H,
+                    item.tank_Mix_between_day_H,
+                    item.data_remaining_tank_Store_H,
+                    item.tank_Store_between_day_H,
+                    "PD1", item.Total_ALL_FT_401_H, item.pd1_between_day_H, 
+                    "",
+                ]);
+                tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","PD2", item.Total_ALL_FT_402_H, item.pd2_between_day_H]);
+                tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","PD3", item.Total_ALL_FT_403_H, item.pd3_between_day_H, item.total_use_between_day_H]);
+                tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","ES", item.Total_ALL_FT_501_H, item.es_between_day_H, item.totalAll_use_between_day_H]);
+              
+              });
 
-            // // --- ส่วนของ โซดาไฟ (H) ---
-            // // ทำเหมือนกัน แต่เพิ่มแถว ES เข้าไปด้วยตามรูป
-            
-            tableRows.push([
-                item.dateTime,
-                "โซดาไฟ",
-                item.density_H,
-                item.data_remaining_fill_H,
-                item.data_remaining_fill_total_H,
-                item.Fill_between_day_H,
-                item.data_Fill_H,
-                item.Total_ALL_FT_101_H,
-                item.Total_ALL_FT_201_H,
-                item.chemical_between_day_H,
-                item.ro_between_day_H,
-                item.data_remaining_tank_Mix_H,
-                item.tank_Mix_between_day_H,
-                item.data_remaining_tank_Store_H,
-                item.tank_Store_between_day_H,
-                "PD1", item.Total_ALL_FT_401_H, item.pd1_between_day_H, 
-                "",
-            ]);
-            tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","PD2", item.Total_ALL_FT_402_H, item.pd2_between_day_H]);
-            tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","PD3", item.Total_ALL_FT_403_H, item.pd3_between_day_H, item.total_use_between_day_H]);
-            tableRows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "","ES", item.Total_ALL_FT_501_H, item.es_between_day_H, item.totalAll_use_between_day_H]);
-          
-          });
+    }
+
 
     // // 2. สร้างแถวข้อมูลตามลำดับของ headers
     // const dataRows = data.map(row => 
@@ -203,7 +206,7 @@ async function convertToCSV(
     // );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
-    return [`${reportName_},\nPeriod : ${period_},Time Start : ${date_start_},Time End : ${date_end_}`,headerRow, ...tableRows].join('\n');
+    return [`${reportName_},\nPeriod : ${period_},Time Start : ${date_start_== "--"?date_start_.replace(/-/g, '/'): date_start_},Time End : ${date_end_ == "--"?date_end_.replace(/-/g, '/'):date_end_}`,headerRow, ...tableRows].join('\n');
 }
 
 const convertedData = (originalData: Data[]) => {
@@ -283,8 +286,9 @@ export default async function Forms1csv(
 )
 {
 
-    var start_timeDisplay = date_start;
-    var end_timeDisplay = date_end;
+    var period_ = "- Day"
+    var start_timeDisplay = "--";
+    var end_timeDisplay = "--";
 
     const apiUrl =  "reportoverview";
 
@@ -293,6 +297,7 @@ export default async function Forms1csv(
     .then((datareponse) => {
         
         data = datareponse.result;
+        period_ = datareponse.period_Display;
         start_timeDisplay = datareponse.start_timeDisplay;
         end_timeDisplay = datareponse.end_timeDisplay;
         // console.log(data);
@@ -313,7 +318,7 @@ export default async function Forms1csv(
 
         const datatable = convertedData(data);
 
-        const period_value = await CheckPeriod(period);
+        // const period_value = await CheckPeriod(period);
 
         const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -325,7 +330,7 @@ export default async function Forms1csv(
             unit_value,
             tank,
             aggregation_value,
-            period_value,
+            period_,
             start_timeDisplay,
             end_timeDisplay
         );
