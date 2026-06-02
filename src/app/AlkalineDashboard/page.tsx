@@ -21,6 +21,8 @@ import {
 
   ChartRecieve,
   ChartMix,
+  CharttankMix,
+  CharttankStore,
   ChartPieUsed,
   ChartlineUsed
 
@@ -89,6 +91,8 @@ export default function AlkalineDashboard() {
   const {data:Alkaliconsumed} = useSWR(`/api/alkaliconsumed?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher);
   const {data:Alkalirecieved} = useSWR(`/api/alkalirecieved?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
   const {data:Alkalimixed} = useSWR(`/api/alkalimixed?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
+  const {data:Alkalitankmixed} = useSWR(`/api/alkalitankmixed?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
+  const {data:Alkalitankstore} = useSWR(`/api/alkalitankstore?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
 
   const {data: Wgcacak} = useSWR(`/api/wgcacak`, fetcher)
 
@@ -161,7 +165,37 @@ export default function AlkalineDashboard() {
 
   }, [Alkalimixed]);
 
-  // 
+  // tank Mixed
+  const [alkaliTankMixData, setAlkaliTankMixData] = useState<ChartDataPoint[]>([]);
+
+  useEffect(() => {
+
+    if (Alkalitankmixed) {
+      setAlkaliTankMixData(Alkalitankmixed.result.map((item: any) => ({
+        name: format((Number(item.UnixTimestamp) * 1000), 'yyyy-MM-dd HH:mm'),
+        data_remaining_tank_Mix: item.data_remaining_tank_Mix,
+        tank_Mix_between_day: item.tank_Mix_between_day,
+      })));
+    }
+
+  }, [Alkalitankmixed]);
+
+  // tank Store
+  const [alkaliTankStoreData, setAlkaliTankStoreData] = useState<ChartDataPoint[]>([]);
+
+  useEffect(() => {
+
+    if (Alkalitankstore) {
+      setAlkaliTankStoreData(Alkalitankstore.result.map((item: any) => ({
+        name: format((Number(item.UnixTimestamp) * 1000), 'yyyy-MM-dd HH:mm'),
+        data_remaining_tank_Store: item.data_remaining_tank_Store,
+        tank_Store_between_day: item.tank_Store_between_day,
+      })));
+    }
+
+  }, [Alkalitankstore]);
+
+
 
   const [pd1AlkaliLineConsumedData, setPd1AlkaliLineConsumedData] = useState<ChartDataPoint[]>([]);
   const [pd2AlkaliLineConsumedData, setPd2AlkaliLineConsumedData] = useState<ChartDataPoint[]>([]);
@@ -343,7 +377,7 @@ export default function AlkalineDashboard() {
             }}
           />
 
-          <div className='h-[420px]'>
+          {/* <div className='h-[420px]'> */}
             {/* Mix */}
             <ChartMix
               tank = {{
@@ -358,10 +392,43 @@ export default function AlkalineDashboard() {
               }}
             />
 
-          </div>
+          {/* </div> */}
 
+          {/* <div className='h-[420px]'> */}
 
-          <div className='h-[420px]'>
+            <CharttankMix
+              tank = {{
+                Iitlename: "คงเหลือ NaOH Mixer (Liter) TANK 3",
+                key_value:"NaOH",
+                Data: alkaliTankMixData,
+                ColorChart: ColorChart,
+                bgColorChartContainer: bgColorChartContainer,
+                ColorHeaderChart: ColorHeaderChart,
+                chartColor1: chartColor1,
+                chartColor2: chartColor2,
+              }}
+            />
+
+          {/* </div> */}
+
+          {/* <div className='h-[420px]'> */}
+
+            <CharttankStore
+              tank = {{
+                Iitlename: "คงเหลือ NaOH Store (Liter) TANK 4",
+                key_value:"NaOH",
+                Data: alkaliTankStoreData,
+                ColorChart: ColorChart,
+                bgColorChartContainer: bgColorChartContainer,
+                ColorHeaderChart: ColorHeaderChart,
+                chartColor1: chartColor1,
+                chartColor2: chartColor2,
+              }}
+            />
+
+          {/* </div> */}
+
+          {/* <div className='h-[420px]'> */}
             {/* Alkali Used */}
             <ChartPieUsed
               tank = {{
@@ -375,10 +442,10 @@ export default function AlkalineDashboard() {
               }}
             />
 
-          </div>
+          {/* </div> */}
 
 
-          <div className='grid grid-cols-1 gap-2 lg:max-h-[420px] xl:max-h-[409px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-500'>
+          <div className='grid grid-cols-1 gap-2 lg:max-h-[400px] xl:max-h-[409px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-500'>
 
             <ChartlineUsed
               tank = {{

@@ -20,6 +20,8 @@ import {Wgcacak} from "@/app/interface";
 import {
   ChartRecieve,
   ChartMix,
+  CharttankMix,
+  CharttankStore,
   ChartPieUsed,
   ChartlineUsed
 
@@ -90,6 +92,8 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
   
   const {data:Acidrecieved} = useSWR(`/api/acidrecieved?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
   const {data:Acidmixed} = useSWR(`/api/acidmixed?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
+  const {data:Acidtankmixed} = useSWR(`/api/acidtankmixed?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
+  const {data:Acidtankstore} = useSWR(`/api/acidtankstore?period=${period}&date_start=${date_start}&date_end=${date_end}`, fetcher)
   const {data: Wgcacak} = useSWR(`/api/wgcacak`, fetcher)
 
   useEffect(() => {
@@ -155,6 +159,36 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
     }
 
   }, [Acidmixed]);
+
+  // tank mixed
+  const [acidTankMixedData, setAcidTankMixedData] = useState<ChartDataPoint[]>([]);
+
+  useEffect(() => {
+
+    if (Acidtankmixed) {
+      setAcidTankMixedData(Acidtankmixed.result.map((item: any) => ({
+        name: format((Number(item.UnixTimestamp) * 1000), 'yyyy-MM-dd HH:mm'),
+        data_remaining_tank_Mix: item.data_remaining_tank_Mix,
+        tank_Mix_between_day: item.tank_Mix_between_day,
+      })));
+    }
+
+  }, [Acidtankmixed]);
+
+  // tank store
+  const [acidTankStoreData, setAcidTankStoreData] = useState<ChartDataPoint[]>([]);
+
+  useEffect(() => {
+
+    if (Acidtankstore) {
+      setAcidTankStoreData(Acidtankstore.result.map((item: any) => ({
+        name: format((Number(item.UnixTimestamp) * 1000), 'yyyy-MM-dd HH:mm'),
+        data_remaining_tank_Store: item.data_remaining_tank_Store,
+        tank_Store_between_day: item.tank_Store_between_day,
+      })));
+    }
+
+  }, [Acidtankstore]);
 
   // Consumed
   const [acidPieData, setAcidPieData] = useState<PieDataPoint[]>([]);
@@ -352,7 +386,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             }}
           />
 
-          <div className='h-[420px]'>
+          {/* <div className='h-[420px]'> */}
             {/* Mix */}
             <ChartMix
               tank = {{
@@ -367,10 +401,36 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
               }}
             />
 
-          </div>
+          {/* </div> */}
+
+          <CharttankMix
+            tank = {{
+              Iitlename: "คงเหลือ HCI Mixer (Liter) TANK 3",
+              key_value:"HCI",
+              Data: acidTankMixedData,  
+              ColorChart: ColorChart,
+              bgColorChartContainer: bgColorChartContainer,
+              ColorHeaderChart: ColorHeaderChart,
+              chartColor1: chartColor2,
+              chartColor2: chartColor3,
+            }}
+          />
+
+          <CharttankStore
+            tank = {{
+              Iitlename: "คงเหลือ HCI Store (Liter) TANK 4",
+              key_value:"HCI",
+              Data: acidTankStoreData,
+              ColorChart: ColorChart,
+              bgColorChartContainer: bgColorChartContainer,
+              ColorHeaderChart: ColorHeaderChart,
+              chartColor1: chartColor2,
+              chartColor2: chartColor3,
+            }}
+          />
 
           {/* Used */}
-          <div className='h-[420px]'>
+          {/* <div className='h-[420px]'> */}
             {/* Acid Used */}
             <ChartPieUsed
               tank = {{
@@ -384,9 +444,10 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
               }}
             />
 
-          </div>
+          {/* </div> */}
 
-          <div className='grid grid-cols-1 gap-2 lg:max-h-[420px] xl:max-h-[409px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-500'>
+
+          <div className='grid grid-cols-1 gap-2 lg:max-h-[400px] xl:max-h-[409px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-500'>
           
             <ChartlineUsed
               tank = {{
@@ -399,7 +460,6 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
                 chartColor: chartColor3,
               }}
             />
-
 
             <ChartlineUsed
               tank = {{

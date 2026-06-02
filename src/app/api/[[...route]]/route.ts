@@ -12,6 +12,8 @@ import {
   alkalimixed, 
   alkaliconsumed, 
   reportall,
+  alkalitankmixed,
+  alkalitankstore,
   reportnaohrecieved,
   reportnaohmixed,
   reportnaohconsumed
@@ -21,6 +23,8 @@ import {
   acidrecieved, 
   acidmixed, 
   acidconsumed,
+  acidtankmixed,
+  acidtankstore,
   reporthcirecieved,
   reporthcimixed,
   reporthciconsumed
@@ -82,8 +86,17 @@ app.get('/chartusedoverview', chartUsedOverview);
 app.get('/alkalirecieved', alkalirecieved);
 app.get('/alkalimixed', alkalimixed);
 app.get('/alkaliconsumed', alkaliconsumed);
+app.get('/alkalitankmixed', alkalitankmixed);
+app.get('/alkalitankstore', alkalitankstore);
+
+app.get('/acidrecieved', acidrecieved);
+app.get('/acidmixed', acidmixed);
+app.get('/acidconsumed', acidconsumed);
+app.get('/acidtankmixed', acidtankmixed);
+app.get('/acidtankstore', acidtankstore);
 
 app.get('/reportoverview', reprotoverview);
+
 
 app.get('/reportnaohrecieved', reportnaohrecieved);
 app.get('/reportnaohmixed', reportnaohmixed);
@@ -93,9 +106,7 @@ app.get('/reporthcirecieved', reporthcirecieved);
 app.get('/reporthcimixed', reporthcimixed);
 app.get('/reporthciused', reporthciconsumed);
 
-app.get('/acidrecieved', acidrecieved);
-app.get('/acidmixed', acidmixed);
-app.get('/acidconsumed', acidconsumed);
+
 
 // app.get('/alkalirecieved', async (c) => {
 

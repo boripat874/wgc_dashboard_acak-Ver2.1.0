@@ -177,11 +177,9 @@ export default async function Forms4(
 
           const originalDate = item.dateTime; // เช่น: '2025-01-20'
 
-          
           // 1. แทนที่ตัวคั่น '-' ด้วยขีดกลาง '/'
           const newDate = originalDate.replaceAll(/-/g, '/'); 
         
-          
           // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
           // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
           return { 
@@ -288,24 +286,36 @@ export default async function Forms4(
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 0,
-                  margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
+                  margin: '0 0 50px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
 
                 {payload.map((entry, index) => {
 
                   let displayName = entry.value;
+
+                  console.log("Legend entry:", entry.value);
                 
-                if (entry.value === "pd1_total") {
+                  if (entry.value === "pd1_total") {
+
                     displayName = `PD1 Total (${C1}%)`;
-                } else if (entry.value === "pd2_total") {
+
+                  } else if (entry.value === "pd2_total") {
+
                     displayName = `PD2 Total (${C1}%)`;
-                } else if (entry.value === "pd3_total") {
+
+                  } else if (entry.value === "pd3_total") {
+
                     displayName = `PD3 Total (${C1}%)`;
-                } else if (entry.value === "es_total") {
+
+                  } else if (entry.value === "es_total") {
+
                     displayName = `ES Total (${C1}%)`;
-                } else{
+
+                  } else{
+
                     displayName = "--";
-                }
+
+                  }
 
                   return (
                     (                      
@@ -328,14 +338,71 @@ export default async function Forms4(
       const ChartToRender = () => {
 
         // Custom Label component to display the value on top of the bars
+        // const CustomBarLabel = (props: any) => {
+        //     const { x, y, width, height, value } = props;
+
+        //     return (
+        //         <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
+        //             {/* {value} */}
+        //         </text>
+        //     );
+        // };
         const CustomBarLabel = (props: any) => {
-            const { x, y, width, height, value } = props;
+
+          const { x, y, width, value } = props;
+
+          const formattedValue = Number(value).toLocaleString(undefined, { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          });
+
+          // ==========================================
+          // ส่วนคำนวณ Dynamic Font Size และระยะห่าง
+          // ==========================================
+          // เงื่อนไขที่ 1: แท่งกราฟกว้างพอ (width > 50) แสดงผลเป็น "แนวนอนเหนือกราฟ"
+          if (width > 50) {
+            // ปรับ font size ตามความกว้าง แต่ล็อกไว้ไม่ให้เกิน 13px และไม่ต่ำกว่า 10px
+            const fontSize = Math.min(Math.max(width * 0.18, 10), 13);
+            const dyValue = -(fontSize * 0.5); // ขยับช่องไฟด้านบนตามขนาดฟอนต์
 
             return (
-                <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
-                    {/* {value} */}
-                </text>
+              <text 
+                  x={x + width / 2} 
+                  y={y} 
+                  dy={dyValue} 
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="middle" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
             );
+          } 
+          
+          // เงื่อนไขที่ 2: แท่งกราฟแคบ (width <= 50) แสดงผลเป็น "แนวตั้ง 90 องศา เหนือกราฟ"
+          else {
+            // สำหรับแนวตั้ง ปรับ font size ตามความกว้างแท่ง โดยล็อกช่วงไว้ที่ 8px ถึง 11px
+            const fontSize = Math.min(Math.max(width * 0.25, 8), 11);
+            
+            // ระยะห่างจากยอดกราฟ ยิ่งฟอนต์เล็ก ยิ่งขยับเข้าไปใกล้ขึ้น
+            const gap = fontSize * 0.7; 
+            const topY = y - gap; 
+
+            return (
+              <text 
+                  x={x+2 + width / 2} 
+                  y={topY} 
+                  transform={`rotate(-90, ${(x+3) + width / 2}, ${topY})`}
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="start" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
+            );
+          }
         };
 
         return (
@@ -348,7 +415,10 @@ export default async function Forms4(
               <Bar dataKey="pd1_total" fill={`#6FD195`} label={<CustomBarLabel />}></Bar>
               <Bar dataKey="pd2_total" fill={`#63C1C1`} label={<CustomBarLabel />}></Bar>
               <Bar dataKey="pd3_total" fill={`#D8A66B`} label={<CustomBarLabel />}></Bar>
-              <Bar dataKey="es_total" fill={`#D8A66B`} label={<CustomBarLabel />}></Bar>
+              {/* <Bar dataKey="es_total" fill={`${bgcolor_}`} label={<CustomBarLabel />}></Bar>  */}
+              {plantName_ !== "NaOH" && (
+                <Bar dataKey="es_total" fill={`${bgcolor_}`} label={<CustomBarLabel />}></Bar>
+              )}
               
               <Tooltip />
               
@@ -386,146 +456,6 @@ export default async function Forms4(
       document.body.removeChild(chartContainer);
 
       // =========================================================================== การประมวลผลสำหรับ Main Line chart ---
-
-      // const lineconvertedDatachart = async(originalData: Data[]) => {
-        
-      //   return originalData.map(item => {
-
-      //     var originalDate = "-/-";
-      //     let monthAndDay = "-/-";
-
-      //     if (aggregation === "perday") {
-
-      //       originalDate = item.dateTime; // เช่น: '2025/01/20'
-
-      //       // 1. ตัดสตริงจากตำแหน่งที่ 5 (index 5 คือตำแหน่งของเดือน) -> ผลลัพธ์: '01/20'
-      //       monthAndDay = originalDate.slice(5); 
-
-      //     }else{
-      //       monthAndDay = item.dateTime+" "+item.start_time; // เช่น: '2025/01/20 01:00'
-      //     }
-
-      //     // 2. แทนที่ตัวคั่น '/' ด้วยขีดกลาง '-' -> ผลลัพธ์: '01-20'
-      //     const newDate = monthAndDay.replaceAll('-', '/'); 
-          
-      //     // คืนค่าอ็อบเจกต์ใหม่ (พร้อมดึง properties อื่นๆ ถ้ามี)
-      //     // NOTE: If you need to keep other properties, you must spread them: {...item, date_time: newDate}
-      //     return { 
-      //       ...item, 
-      //       dateTime: newDate , 
-      //       error: Number(item.error)
-      //     }; 
-
-      //   });
-
-      // };
-
-      // const linedatachart = await lineconvertedDatachart(data);
-
-      // const lineChartContainer = document.createElement('div');
-
-      //   lineChartContainer.style.position = 'absolute';
-      //   lineChartContainer.style.left = '-1999px';
-      //   lineChartContainer.style.width = '1000px'; // Set width for the chart
-      //   lineChartContainer.style.height = '200px'; // Set height for the chart
-      //   // lineChartContainer.style.border = '1px solid #000';
-      //   lineChartContainer.style.padding = '10px';
-
-      //   document.body.appendChild(lineChartContainer);
-
-      //   const lineroot = ReactDOM.createRoot(lineChartContainer);
-
-      //   const LinecustomLegend = (props: { payload: any[] } ) => {
-
-      //     const { payload } = props;
-
-      //     return (
-      //         <ul data-component-id="src\components\reportPdf\forms4.tsx:383:14" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="383" data-component-file="forms4.tsx" data-component-name="ul" data-component-content="%7B%22elementName%22%3A%22ul%22%7D" style={{
-      //             display: 'flex',
-      //             justifyContent: 'center',
-      //             alignItems: 'center',
-      //             padding: 0,
-      //             margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
-      //         }}>
-      //             {payload.map((entry, index) => {
-
-      //                 if(entry.value === "pd1_total"){
-      //                   entry.value = "Error PD1 ";
-      //                 }else if(entry.value === "pd2_total"){
-      //                   entry.value = "Error PD2 ";
-      //                 }else if(entry.value === "pd3_total"){
-      //                   entry.value = "Error PD3 ";
-      //                 }
-
-      //               return (
-      //                   <li data-component-id="src\components\reportPdf\forms4.tsx:401:24" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="401" data-component-file="forms4.tsx" data-component-name="li" data-component-content="%7B%22elementName%22%3A%22li%22%7D"
-      //                       key={`item-${index}`}
-      //                       style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}
-      //                   >
-      //                       {/* ไอคอนที่กำหนดเอง */}
-      //                       <svg data-component-id="src\components\reportPdf\forms4.tsx:406:28" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="406" data-component-file="forms4.tsx" data-component-name="svg" data-component-content="%7B%22elementName%22%3A%22svg%22%7D" width="16" height="16" viewBox="0 0 32 32" style={{ marginRight: '5px' }}>
-      //                           <rect data-component-id="src\components\reportPdf\forms4.tsx:407:32" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="407" data-component-file="forms4.tsx" data-component-name="rect" data-component-content="%7B%22elementName%22%3A%22rect%22%7D" x="0" y="0" width="32" height="100" fill={entry.color} />
-      //                       </svg>
-      //                       {/* ข้อความที่กำหนดเอง */}
-      //                       <span data-component-id="src\components\reportPdf\forms4.tsx:410:28" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="410" data-component-file="forms4.tsx" data-component-name="span" data-component-content="%7B%22elementName%22%3A%22span%22%2C%22className%22%3A%22pb-3%22%7D" className='pb-3'>{`Error (${unit_value})`}</span>
-      //                   </li>
-      //                 )                  
-      //             })}
-      //         </ul>
-      //       );
-      //   };
-
-      //   const LineChartToRender = () => {
-
-      //     return (
-      //       <ResponsiveContainer data-component-id="src\components\reportPdf\forms4.tsx:421:12" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="421" data-component-file="forms4.tsx" data-component-name="ResponsiveContainer" data-component-content="%7B%22elementName%22%3A%22ResponsiveContainer%22%7D" width="100%" height="100%">
-      //           <LineChart data-component-id="src\components\reportPdf\forms4.tsx:422:16" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="422" data-component-file="forms4.tsx" data-component-name="LineChart" data-component-content="%7B%22elementName%22%3A%22LineChart%22%7D" data={linedatachart} >
-      //               <CartesianGrid data-component-id="src\components\reportPdf\forms4.tsx:423:20" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="423" data-component-file="forms4.tsx" data-component-name="CartesianGrid" data-component-content="%7B%22elementName%22%3A%22CartesianGrid%22%7D" strokeDasharray="1 1" stroke="#D9D9D9" />
-      //               <XAxis data-component-id="src\components\reportPdf\forms4.tsx:424:20" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="424" data-component-file="forms4.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="dateTime" stroke="#000" fontSize={12}/>
-      //               <YAxis data-component-id="src\components\reportPdf\forms4.tsx:425:20" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="425" data-component-file="forms4.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={12} tickFormatter={(value) => value.toLocaleString()}/>
-                    
-      //               {/* === FIX: Change <Bar> to <Line> === */}
-      //               <Line data-component-id="src\components\reportPdf\forms4.tsx:428:20" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="428" data-component-file="forms4.tsx" data-component-name="Line" data-component-content="%7B%22elementName%22%3A%22Line%22%2C%22type%22%3A%22monotone%22%7D" type="monotone" // Optional: makes the line smooth
-      //                   dataKey="error" 
-      //                   stroke={`#FF0000`} // Use stroke for line color
-      //                   strokeWidth={2}
-      //                   dot={false} // Optional: removes dots at data points
-      //                   // label={<CustomBarLabel />} // Remove or adapt the label component
-      //               />
-      //               {/* <Line type="monotone" // Optional: makes the line smooth
-      //                   dataKey="pd2_total" 
-      //                   stroke={`#63C1C1`} // Use stroke for line color
-      //                   strokeWidth={2}
-      //                   dot={false} // Optional: removes dots at data points
-      //                   // label={<CustomBarLabel />} // Remove or adapt the label component
-      //               />
-      //               <Line type="monotone" // Optional: makes the line smooth
-      //                   dataKey="pd3_total" 
-      //                   stroke={`#D8A66B`} // Use stroke for line color
-      //                   strokeWidth={2}
-      //                   dot={false} // Optional: removes dots at data points
-      //                   // label={<CustomBarLabel />} // Remove or adapt the label component
-      //               /> */}
-                    
-      //               {/* Optional: Add Tooltip for value display on hover */}
-      //               {/* <Tooltip /> */}
-
-      //               <Legend data-component-id="src\components\reportPdf\forms4.tsx:453:20" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="453" data-component-file="forms4.tsx" data-component-name="Legend" data-component-content="%7B%22elementName%22%3A%22Legend%22%7D"
-      //                 verticalAlign="top"
-      //                 align="center"
-      //                 content={<LinecustomLegend data-component-id="src\components\reportPdf\forms4.tsx:456:31" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="456" data-component-file="forms4.tsx" data-component-name="LinecustomLegend" data-component-content="%7B%22elementName%22%3A%22LinecustomLegend%22%7D" payload={[{ color: `${bgcolor_}` }]} />
-      //                 } 
-      //                 iconSize={16}
-      //               />
-      //           </LineChart>
-      //      </ResponsiveContainer>
-      //     );
-      // };
-
-      // lineroot.render(<LineChartToRender data-component-id="src\components\reportPdf\forms4.tsx:465:22" data-component-path="src\components\reportPdf\forms4.tsx" data-component-line="465" data-component-file="forms4.tsx" data-component-name="LineChartToRender" data-component-content="%7B%22elementName%22%3A%22LineChartToRender%22%7D" />);
-
-      // Wait for a short moment to ensure the chart is rendered
-      // await new Promise(resolve => setTimeout(resolve, 1500)); 
 
       // const linecanvas = await html2canvas(lineChartContainer, { 
       //   // logging: true,
@@ -693,7 +623,6 @@ export default async function Forms4(
               { content: `Uesd total RO\n(L)`, rowSpan: 2}, // รวม 2 แถว
             ];
 
-
             // หัวตารางแถวที่ 2: กำหนดหัวข้อย่อย
             headerRow2 = [
               { content: `${plantName_}\n(${C1}%) (L)`}, 
@@ -818,8 +747,6 @@ export default async function Forms4(
             ]);
 
           }
-
-          
 
           // แถวข้อมูล (tableRows) - ใช้ตามที่คุณกำหนดไว้ แต่ต้องตรวจสอบการจัดเรียงข้อมูลให้ตรงกับหัวตารางใหม่
           // **ข้อควรระวัง:** `tableRows` ที่คุณสร้างไว้มี 16 คอลัมน์ (นับจาก array items) ซึ่งไม่ตรงกับรูปภาพที่มี 17 คอลัมน์ (17 หัวข้อในแถวที่ 2)

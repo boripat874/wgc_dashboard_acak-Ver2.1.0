@@ -279,7 +279,7 @@ export default async function Forms1(
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 0,
-                  margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
+                  margin: '0 0 50px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
                   {payload.map((entry, index) => (
                       <li 
@@ -302,22 +302,80 @@ export default async function Forms1(
       const ChartToRender = () => {
 
         // Custom Label component to display the value on top of the bars
+        // const CustomBarLabel = (props: any) => {
+        //     const { x, y, width, height, value } = props;
+        //     return (
+        //         <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
+        //             {Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        //         </text>
+        //     );
+        // };
+
         const CustomBarLabel = (props: any) => {
-            const { x, y, width, height, value } = props;
+
+          const { x, y, width, value } = props;
+
+          const formattedValue = Number(value).toLocaleString(undefined, { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+          });
+
+          // ==========================================
+          // ส่วนคำนวณ Dynamic Font Size และระยะห่าง
+          // ==========================================
+          // เงื่อนไขที่ 1: แท่งกราฟกว้างพอ (width > 50) แสดงผลเป็น "แนวนอนเหนือกราฟ"
+          if (width > 50) {
+            // ปรับ font size ตามความกว้าง แต่ล็อกไว้ไม่ให้เกิน 13px และไม่ต่ำกว่า 10px
+            const fontSize = Math.min(Math.max(width * 0.18, 10), 13);
+            const dyValue = -(fontSize * 0.5); // ขยับช่องไฟด้านบนตามขนาดฟอนต์
+
             return (
-                <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
-                    {/* {value} */}
-                </text>
+              <text 
+                  x={x + width / 2} 
+                  y={y} 
+                  dy={dyValue} 
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="middle" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
             );
+          } 
+          
+          // เงื่อนไขที่ 2: แท่งกราฟแคบ (width <= 50) แสดงผลเป็น "แนวตั้ง 90 องศา เหนือกราฟ"
+          else {
+            // สำหรับแนวตั้ง ปรับ font size ตามความกว้างแท่ง โดยล็อกช่วงไว้ที่ 8px ถึง 11px
+            const fontSize = Math.min(Math.max(width * 0.25, 8), 11);
+            
+            // ระยะห่างจากยอดกราฟ ยิ่งฟอนต์เล็ก ยิ่งขยับเข้าไปใกล้ขึ้น
+            const gap = fontSize * 0.7; 
+            const topY = y - gap; 
+
+            return (
+              <text 
+                  x={x+2 + width / 2} 
+                  y={topY} 
+                  transform={`rotate(-90, ${(x+3) + width / 2}, ${topY})`}
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="start" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
+            );
+          }
         };
 
         return (
           <ResponsiveContainer  width="100%" height="100%">
               <BarChart  data={datachart}>
                   <CartesianGrid  strokeDasharray="1 1" stroke="#D9D9D9" />
-                  <XAxis data-component-id="src\components\reportPdf\forms1.tsx:294:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="294" data-component-file="forms1.tsx" data-component-name="XAxis" data-component-content="%7B%22elementName%22%3A%22XAxis%22%7D" dataKey="date_time" stroke="#000" fontSize={12} />
-                  <YAxis data-component-id="src\components\reportPdf\forms1.tsx:295:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="295" data-component-file="forms1.tsx" data-component-name="YAxis" data-component-content="%7B%22elementName%22%3A%22YAxis%22%7D" stroke="#000" fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
-                  <Bar data-component-id="src\components\reportPdf\forms1.tsx:296:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="296" data-component-file="forms1.tsx" data-component-name="Bar" data-component-content="%7B%22elementName%22%3A%22Bar%22%7D" dataKey="value" fill={`${bgcolor_}`} label={<CustomBarLabel data-component-id="src\components\reportPdf\forms1.tsx:296:67" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="296" data-component-file="forms1.tsx" data-component-name="CustomBarLabel" data-component-content="%7B%22elementName%22%3A%22CustomBarLabel%22%7D" />}>
+                  <XAxis dataKey="date_time" stroke="#000" fontSize={12} />
+                  <YAxis  stroke="#000" fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
+                  <Bar dataKey="value" fill={`${bgcolor_}`} label={<CustomBarLabel data-component-id="src\components\reportPdf\forms1.tsx:296:67"/>}>
                       {/* The LabelList component is removed */}
                   </Bar>
                   <Legend data-component-id="src\components\reportPdf\forms1.tsx:299:18" data-component-path="src\components\reportPdf\forms1.tsx" data-component-line="299" data-component-file="forms1.tsx" data-component-name="Legend" data-component-content="%7B%22elementName%22%3A%22Legend%22%7D"
@@ -421,7 +479,7 @@ export default async function Forms1(
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 0,
-                  margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
+                  margin: '0 0 50px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
                   {payload.map((entry, index) => (
                       <li 
@@ -627,7 +685,7 @@ export default async function Forms1(
             `คงเหลือ Tank ${plantName_} (${C2}%)\n(L)`, 
             `คงเหลือ ${plantName_} (${C2}%) รวมสูตร\n(kg)`, 
             `ผลต่าง ${plantName_} (${C2}%) ใน Tank\nระหว่างวัน (kg)`, 
-            `ผลต่าง ${plantName_} (${C2}%) ใน Tank\nระหว่างวัน (kg)`, 
+            `รับเข้าใหม่ (kg)`, 
           ];
 
           let tableRows = [] as any;
@@ -644,6 +702,7 @@ export default async function Forms1(
               item.Fill_between_day,
               item.data_Fill
             ])
+
           });
 
           // console.log("tableRows >>", tableRows);

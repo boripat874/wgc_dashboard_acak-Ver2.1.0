@@ -266,7 +266,7 @@ export default async function Forms2(
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 0,
-                  margin: '0 0 10px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
+                  margin: '0 0 50px 0' // เพิ่ม margin ด้านล่างเพื่อเว้นช่องว่าง
               }}>
                   {payload.map((entry, index) => {
 
@@ -310,13 +310,70 @@ export default async function Forms2(
       const ChartToRender = () => {
 
         // Custom Label component to display the value on top of the bars
+        // const CustomBarLabel = (props: any) => {
+        //     const { x, y, width, height, value } = props;
+        //     return (
+        //         <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
+        //             {/* {value} */}
+        //         </text>
+        //     );
+        // };
         const CustomBarLabel = (props: any) => {
-            const { x, y, width, height, value } = props;
+
+          const { x, y, width, value } = props;
+
+          const formattedValue = Number(value).toLocaleString(undefined, { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+          });
+
+          // ==========================================
+          // ส่วนคำนวณ Dynamic Font Size และระยะห่าง
+          // ==========================================
+          // เงื่อนไขที่ 1: แท่งกราฟกว้างพอ (width > 50) แสดงผลเป็น "แนวนอนเหนือกราฟ"
+          if (width > 50) {
+            // ปรับ font size ตามความกว้าง แต่ล็อกไว้ไม่ให้เกิน 13px และไม่ต่ำกว่า 10px
+            const fontSize = Math.min(Math.max(width * 0.18, 10), 13);
+            const dyValue = -(fontSize * 0.5); // ขยับช่องไฟด้านบนตามขนาดฟอนต์
+
             return (
-                <text x={x + width / 2} y={y} dy={-6} fill="rgba(0, 0, 0, 0.8)" textAnchor="middle" fontSize={12}>
-                    {/* {value} */}
-                </text>
+              <text 
+                  x={x + width / 2} 
+                  y={y} 
+                  dy={dyValue} 
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="middle" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
             );
+          } 
+          
+          // เงื่อนไขที่ 2: แท่งกราฟแคบ (width <= 50) แสดงผลเป็น "แนวตั้ง 90 องศา เหนือกราฟ"
+          else {
+            // สำหรับแนวตั้ง ปรับ font size ตามความกว้างแท่ง โดยล็อกช่วงไว้ที่ 8px ถึง 11px
+            const fontSize = Math.min(Math.max(width * 0.25, 8), 11);
+            
+            // ระยะห่างจากยอดกราฟ ยิ่งฟอนต์เล็ก ยิ่งขยับเข้าไปใกล้ขึ้น
+            const gap = fontSize * 0.7; 
+            const topY = y - gap; 
+
+            return (
+              <text 
+                  x={x+2 + width / 2} 
+                  y={topY} 
+                  transform={`rotate(-90, ${(x+3) + width / 2}, ${topY})`}
+                  fill="rgba(0, 0, 0, 0.8)" 
+                  textAnchor="start" 
+                  fontSize={fontSize}
+                  fontWeight="bold"
+              >
+                  {formattedValue}
+              </text>
+            );
+          }
         };
 
         return (

@@ -381,6 +381,218 @@ export const alkalimixed = async (c) => {
   }
 };
 
+// Dashboard HCI Tank Mixed
+export const alkalitankmixed = async (c) => {
+
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error("Request timed out")), timeout);
+  });
+
+  const alkalinetankmixedDataListLogic = new Promise(async (resolve, reject) => {
+    try {
+      // ใส่ logic การทำงานของคุณตรงนี้
+      // เช่น การเรียกดูข้อมูลจากฐานข้อมูล
+      const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp
+      // const period = await c.req.query();
+      // console.log(timestamp);
+ 
+      const data_query = await db('ScadaDataLogAlkaline')
+        .select('*')
+        .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+        .where('UnixTimestamp', '<', timestamp.endTimestamp)
+        .orderBy('UnixTimestamp', 'asc');
+
+      const promises_ = await Promise.all(
+
+            data_query.map(async (item) => {
+    
+              const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
+            
+              // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+              const prevStart = new Date(baseDate);
+              prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+              prevStart.setHours(0, 0, 0, 0);
+    
+              // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+              const prevEnd = new Date(baseDate);
+              prevEnd.setHours(0, 0, 0, 0);
+    
+              // แปลงเป็น Seconds (Unix Timestamp)
+              const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+              const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+    
+              // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
+              const rows = await db('ScadaDataLogAlkaline')
+                .select("*")
+                .where('UnixTimestamp', '>=', prevStartSec)
+                .where('UnixTimestamp', '<=', prevEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+    
+              // console.log("rows >>", rows);
+    
+              if (rows) {
+
+                const constant_tank3_Mix = 0.3;
+                const constant_tank4_Store = 1.3;
+    
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + constant_tank3_Mix) * 1000;
+
+                item.data_remaining_tank_Mix = data_remaining_tank_Mix;
+
+                // col G
+                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + constant_tank3_Mix) * 1000;
+
+                item.tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+    
+                return {
+                  ...item
+                }
+    
+              }
+              
+              return null; // หรือ return ค่าอื่นๆ ตามที่ต้องการเมื่อไม่มีข้อมูลของวันก่อนหน้า
+            })
+      );
+
+      // console.log("promises_ >>", await Promise.all(promises_));
+      const final_items = promises_.filter(item => item !== null);
+
+      resolve({ 
+        total: final_items.length,
+        result: final_items 
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+
+  try {
+    const result = await Promise.race([alkalinetankmixedDataListLogic, timeoutPromise]);
+    
+    return c.json(result);
+
+  } catch (error) {
+    if (error instanceof Error && error.message === "Request timed out") {
+      // ส่ง status 402 หรือตามที่ต้องการกลับไป
+      return c.json({ message: "Request timed out" }, 402);
+    } else {
+      // จัดการกับ error อื่นๆ
+      console.error("An unexpected error occurred:", error);
+      return c.json({ message: "Internal Server Error" }, 500);
+    }
+  }
+};
+
+// Dashboard Alkali Tank Store
+export const alkalitankstore = async (c) => {
+
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error("Request timed out")), timeout);
+  });
+
+  const alkalitankstoreDataListLogic = new Promise(async (resolve, reject) => {
+    try {
+      // ใส่ logic การทำงานของคุณตรงนี้
+      // เช่น การเรียกดูข้อมูลจากฐานข้อมูล
+      const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp
+      // const period = await c.req.query();
+      // console.log(timestamp);
+ 
+      const data_query = await db('ScadaDataLogAlkaline')
+        .select('*')
+        .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+        .where('UnixTimestamp', '<', timestamp.endTimestamp)
+        .orderBy('UnixTimestamp', 'asc');
+
+      const promises_ = await Promise.all(
+
+            data_query.map(async (item) => {
+    
+              const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
+            
+              // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+              const prevStart = new Date(baseDate);
+              prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+              prevStart.setHours(0, 0, 0, 0);
+    
+              // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+              const prevEnd = new Date(baseDate);
+              prevEnd.setHours(0, 0, 0, 0);
+    
+              // แปลงเป็น Seconds (Unix Timestamp)
+              const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+              const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+    
+              // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
+              const rows = await db('ScadaDataLogAlkaline')
+                .select("*")
+                .where('UnixTimestamp', '>=', prevStartSec)
+                .where('UnixTimestamp', '<=', prevEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+    
+              // console.log("rows >>", rows);
+    
+              if (rows) {
+
+                const constant_tank3_Mix = 0.3;
+                const constant_tank4_Store = 1.3;
+    
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + constant_tank4_Store) * 1000;
+
+                item.data_remaining_tank_Store = data_remaining_tank_Store;
+
+                // col I
+                const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + constant_tank4_Store) * 1000;
+
+                item.tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+    
+                return {
+                  ...item
+                }
+    
+              }
+              
+              return null; // หรือ return ค่าอื่นๆ ตามที่ต้องการเมื่อไม่มีข้อมูลของวันก่อนหน้า
+            })
+      );
+
+      // console.log("promises_ >>", await Promise.all(promises_));
+      const final_items = promises_.filter(item => item !== null);
+
+      resolve({ 
+        total: final_items.length,
+        result: final_items 
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+
+  try {
+    const result = await Promise.race([alkalitankstoreDataListLogic, timeoutPromise]);
+    
+    return c.json(result);
+
+  } catch (error) {
+    if (error instanceof Error && error.message === "Request timed out") {
+      // ส่ง status 402 หรือตามที่ต้องการกลับไป
+      return c.json({ message: "Request timed out" }, 402);
+    } else {
+      // จัดการกับ error อื่นๆ
+      console.error("An unexpected error occurred:", error);
+      return c.json({ message: "Internal Server Error" }, 500);
+    }
+  }
+};
+
 // Dashboard Alkali Transfered
 export const alkaliconsumed = async (c) => {
 

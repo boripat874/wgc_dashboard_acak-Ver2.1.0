@@ -352,37 +352,12 @@ export default async function Forms0(
           let tableRows = [] as any;
 
           datatable.forEach((item) => {
+
             // --- ส่วนของ กรดเกลือ (N) ---
             // แถวแรกของกรดเกลือ จะมีข้อมูลหลัก + ข้อมูล PD1
-
-            tableRows.push([
-                { content: item.dateTime, rowSpan: 3 }, // วันที่
-                { content: "กรดเกลือ", rowSpan: 3 },    // รายการ
-                { content: item.density_N, rowSpan: 3 }, // Density
-                { content: item.data_remaining_fill_N, rowSpan: 3 },
-                { content: item.data_remaining_fill_total_N, rowSpan: 3 },
-                { content: item.Fill_between_day_N, rowSpan: 3 },
-                { content: item.data_Fill_N, rowSpan: 3 },
-                { content: item.Total_ALL_FT_101_N, rowSpan: 3 },
-                { content: item.Total_ALL_FT_201_N, rowSpan: 3 },
-                { content: item.chemical_between_day_N, rowSpan: 3 },
-                { content: item.ro_between_day_N, rowSpan: 3 },
-                { content: item.data_remaining_tank_Mix_N, rowSpan: 3 },
-                { content: item.tank_Mix_between_day_N, rowSpan: 3 },
-                { content: item.data_remaining_tank_Store_N, rowSpan: 3 },
-                { content: item.tank_Store_between_day_N, rowSpan: 3 },
-                "PD1", item.Total_ALL_FT_401_N, item.pd1_between_day_N, 
-                { content: "", rowSpan: 2 } // ผลต่างมิเตอร์ทั้งวัน (ว่างไว้รอแถวสุดท้าย)
-            ]);
-            tableRows.push(["PD2", item.Total_ALL_FT_402_N, item.pd2_between_day_N]);
-            tableRows.push(["PD3", item.Total_ALL_FT_403_N, item.pd3_between_day_N, item.totalAll_use_between_day_N]);
-
-            // // --- ส่วนของ โซดาไฟ (H) ---
-            // // ทำเหมือนกัน แต่เพิ่มแถว ES เข้าไปด้วยตามรูป
-            
             tableRows.push([
                 { content: item.dateTime, rowSpan: 4 },
-                { content: "โซดาไฟ", rowSpan: 4 },
+                { content: "กรดเกลือ", rowSpan:  4},    // รายการ
                 { content: item.density_H, rowSpan: 4 },
                 { content: item.data_remaining_fill_H, rowSpan: 4 },
                 { content: item.data_remaining_fill_total_H, rowSpan: 4 },
@@ -402,6 +377,38 @@ export default async function Forms0(
             tableRows.push(["PD2", item.Total_ALL_FT_402_H, item.pd2_between_day_H]);
             tableRows.push(["PD3", item.Total_ALL_FT_403_H, item.pd3_between_day_H, item.total_use_between_day_H]);
             tableRows.push(["ES", item.Total_ALL_FT_501_H, item.es_between_day_H, item.totalAll_use_between_day_H]);
+
+
+            tableRows.push([
+                { content: item.dateTime, rowSpan: 3 }, // วันที่
+                
+                { content: "โซดาไฟ", rowSpan: 3 },
+                { content: item.density_N, rowSpan: 3 }, // Density
+                { content: item.data_remaining_fill_N, rowSpan: 3 },
+                { content: item.data_remaining_fill_total_N, rowSpan: 3 },
+                { content: item.Fill_between_day_N, rowSpan: 3 },
+                { content: item.data_Fill_N, rowSpan: 3 },
+                { content: item.Total_ALL_FT_101_N, rowSpan: 3 },
+                { content: item.Total_ALL_FT_201_N, rowSpan: 3 },
+                { content: item.chemical_between_day_N, rowSpan: 3 },
+                { content: item.ro_between_day_N, rowSpan: 3 },
+                { content: item.data_remaining_tank_Mix_N, rowSpan: 3 },
+                { content: item.tank_Mix_between_day_N, rowSpan: 3 },
+                { content: item.data_remaining_tank_Store_N, rowSpan: 3 },
+                { content: item.tank_Store_between_day_N, rowSpan: 3 },
+                "PD1", item.Total_ALL_FT_401_N, item.pd1_between_day_N, 
+                { content: "", rowSpan: 2 } // ผลต่างมิเตอร์ทั้งวัน (ว่างไว้รอแถวสุดท้าย)
+            ]);
+            tableRows.push(["PD2", item.Total_ALL_FT_402_N, item.pd2_between_day_N]);
+            tableRows.push(["PD3", item.Total_ALL_FT_403_N, item.pd3_between_day_N, item.totalAll_use_between_day_N]);
+            
+
+            
+
+            // // --- ส่วนของ โซดาไฟ (H) ---
+            // // ทำเหมือนกัน แต่เพิ่มแถว ES เข้าไปด้วยตามรูป
+            
+            
           
           });
 

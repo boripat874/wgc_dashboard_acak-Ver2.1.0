@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,LabelList, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface IF_ChartRecieve {
     Iitlename:string,
@@ -43,10 +43,38 @@ interface IF_ChartlineUsed {
     chartColor:string
 }
 
+export const useDarkMode = () => {
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        // 1. เช็คสถานะตอนโหลด Component ครั้งแรก
+        setIsDark(document.documentElement.classList.contains('dark'));
+
+        // 2. ดักฟังเมื่อมีการเพิ่ม/ลดคลาส 'dark' ที่แท็ก html
+        const observer = new MutationObserver(() => {
+        setIsDark(document.documentElement.classList.contains('dark'));
+        });
+
+        observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    return isDark;
+};
+
 export const ChartRecieve: React.FC<{ tank: IF_ChartRecieve }> = ({ tank }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
 
     const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
         title, 
@@ -102,15 +130,27 @@ export const ChartRecieve: React.FC<{ tank: IF_ChartRecieve }> = ({ tank }) => {
 
                                 <CartesianGrid strokeDasharray="3 3" stroke="#444" />
 
-                                <XAxis dataKey="name" stroke={tank.ColorChart} fontSize={12} />
+                                {/* ปรับสีข้อความ (tick) ของแกน X */}
+                                <XAxis 
+                                    dataKey="name" 
+                                    fontSize={12} 
+                                    tick={{ fill: colorChart }} 
+                                    axisLine={{ stroke: "#fff", opacity: 0.5 }}
+                                />
 
-                                <YAxis stroke={tank.ColorChart} fontSize={12} 
-                                tickFormatter={(value) => 
-                                    new Intl.NumberFormat('en-US', {
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0,
-                                    }).format(value)
-                                } />
+                                {/* ปรับสีข้อความ (tick) ของแกน Y */}
+                                <YAxis 
+                                    fontSize={12} 
+                                    // stroke={tank.ColorHeaderChart} 
+                                    tick={{ fill: colorChart }} 
+                                    axisLine={{ stroke: tank.ColorHeaderChart, opacity: 0.5 }}
+                                    tickFormatter={(value) => 
+                                        new Intl.NumberFormat('en-US', {
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0,
+                                        }).format(value)
+                                    } 
+                                />
 
                                 <Tooltip 
                                     contentStyle={{ backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '5px' }}
@@ -151,6 +191,11 @@ export const ChartMix: React.FC<{ tank: IF_ChartMix }> = ({ tank }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
 
     const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
         title, 
@@ -206,8 +251,8 @@ export const ChartMix: React.FC<{ tank: IF_ChartMix }> = ({ tank }) => {
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={tank.Data} >
                             <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                            <XAxis dataKey="name" stroke={tank.ColorChart} fontSize={12} />
-                            <YAxis stroke={tank.ColorChart} fontSize={12} 
+                            <XAxis dataKey="name" stroke={colorChart} fontSize={12} />
+                            <YAxis stroke={colorChart} fontSize={12} 
                                 tickFormatter={(value) => 
                                 new Intl.NumberFormat('en-US', {
                                 minimumFractionDigits: 0,
@@ -258,12 +303,245 @@ export const ChartMix: React.FC<{ tank: IF_ChartMix }> = ({ tank }) => {
     );
 };
 
+export const CharttankMix: React.FC<{ tank: IF_ChartMix }> = ({ tank }) => {
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
+
+    const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
+        title, 
+        children, 
+        className = '' ,
+        chartClassName = '' 
+    }) => (
+        <div className={`
+            ${tank.bgColorChartContainer} rounded-[5px] flex flex-col gap-2 sm:gap-3 lg:gap-4 justify-start items-start w-full 
+            ${className}
+            ${isFullscreen ? 'fixed inset-0 z-[9999] h-screen w-screen p-4' : 'relative'} 
+        `}>
+            <div className="flex justify-between items-center w-full p-2">
+                <h3 className={`text-sm sm:text-sm font-inter font-bold leading-5 sm:leading-6 text-left ${tank.ColorHeaderChart} ml-2 sm:ml-3`}>
+                    {title}
+                </h3>
+                
+                {/* ปุ่ม Icon สำหรับ Fullscreen / Exit */}
+                <button
+                    onClick={toggleFullscreen}
+                    className={`p-2 rounded-full hover:bg-gray-300 transition-colors ${tank.ColorHeaderChart}`}
+                    title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                    {isFullscreen ? (
+                        // Icon สำหรับตอนกด "ย่อหน้าจอ" (Minimize)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                        </svg>
+                    ) : (
+                        // Icon สำหรับตอนกด "ขยายหน้าจอ" (Maximize)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                    )}
+                </button>
+            </div>
+
+            <div className={`
+                ${chartClassName != '' ? chartClassName : 'w-full h-[180px] p-2'}
+                ${isFullscreen ? '!h-[calc(100vh-100px)]' : ''} 
+            `}>
+                {children}
+            </div>
+        </div>
+    );
+
+    return (
+        <div>
+            <ChartContainer title={tank.Iitlename} className='h-full'
+                chartClassName='w-full h-[340px] p-2 sm:p-4'>
+    
+                {tank.Data && tank.Data.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={tank.Data} >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                            <XAxis dataKey="name" stroke={colorChart} fontSize={12} />
+                            <YAxis stroke={colorChart} fontSize={12} 
+                                tickFormatter={(value) => 
+                                new Intl.NumberFormat('en-US', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                                }).format(value)
+                            }/>
+                            <Tooltip
+                                wrapperStyle={{ zIndex: 10000 }}
+                                contentStyle={{ backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '5px' }}
+                                labelStyle={{ color: '#fff' }}
+                                trigger="hover" 
+                                shared={true}
+                                formatter={(value: any, name: any) => {
+                                    const numValue = Number(value);
+                                    if (isNaN(numValue)) return [value, name];
+
+                                    const formattedValue = numValue.toLocaleString('en-US', {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                    });
+                                    
+                                    // คืนค่าแบบ 2 ตำแหน่งใน Array: [Value, Name]
+                                    return [formattedValue, name]; 
+                                }}
+                        
+                            
+                            />
+                            <Legend />
+                            <Bar dataKey="data_remaining_tank_Mix" fill={`${tank.chartColor1}`}  name={tank.key_value} >
+                            {/* <LabelList dataKey="main_volume" position="top" /> */}
+                            </Bar>
+
+                        </BarChart>
+                     </ResponsiveContainer>  
+                ) : (
+                <div className={`flex justify-center items-center w-full h-full ${tank.ColorHeaderChart} text-2xl`}>
+                    No data
+                </div>
+                )}
+                </ChartContainer>
+            
+            {/* Overlay สีดำจางๆ เมื่อกดเต็มจอ เพื่อป้องกันการกดปุ่มด้านหลัง */}
+            {isFullscreen && <div className="fixed inset-0 bg-black/50 z-[9990]" onClick={toggleFullscreen}></div>}
+        </div>
+    );
+};
+
+export const CharttankStore: React.FC<{ tank: IF_ChartMix }> = ({ tank }) => {
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
+
+    const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
+        title, 
+        children, 
+        className = '' ,
+        chartClassName = '' 
+    }) => (
+        <div className={`
+            ${tank.bgColorChartContainer} rounded-[5px] flex flex-col gap-2 sm:gap-3 lg:gap-4 justify-start items-start w-full 
+            ${className}
+            ${isFullscreen ? 'fixed inset-0 z-[9999] h-screen w-screen p-4' : 'relative'} 
+        `}>
+            <div className="flex justify-between items-center w-full p-2">
+                <h3 className={`text-sm sm:text-sm font-inter font-bold leading-5 sm:leading-6 text-left ${tank.ColorHeaderChart} ml-2 sm:ml-3`}>
+                    {title}
+                </h3>
+                
+                {/* ปุ่ม Icon สำหรับ Fullscreen / Exit */}
+                <button
+                    onClick={toggleFullscreen}
+                    className={`p-2 rounded-full hover:bg-gray-300 transition-colors ${tank.ColorHeaderChart}`}
+                    title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                    {isFullscreen ? (
+                        // Icon สำหรับตอนกด "ย่อหน้าจอ" (Minimize)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                        </svg>
+                    ) : (
+                        // Icon สำหรับตอนกด "ขยายหน้าจอ" (Maximize)
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                    )}
+                </button>
+            </div>
+
+            <div className={`
+                ${chartClassName != '' ? chartClassName : 'w-full h-[180px] p-2'}
+                ${isFullscreen ? '!h-[calc(100vh-100px)]' : ''} 
+            `}>
+                {children}
+            </div>
+        </div>
+    );
+
+    return (
+        <div>
+            <ChartContainer title={tank.Iitlename} className='h-full'
+                chartClassName='w-full h-[340px] p-2 sm:p-4'>
+    
+                {tank.Data && tank.Data.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={tank.Data} >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                            <XAxis dataKey="name" stroke={colorChart} fontSize={12} />
+                            <YAxis stroke={colorChart} fontSize={12} 
+                                tickFormatter={(value) => 
+                                new Intl.NumberFormat('en-US', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                                }).format(value)
+                            }/>
+                            <Tooltip
+                                wrapperStyle={{ zIndex: 10000 }}
+                                contentStyle={{ backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '5px' }}
+                                labelStyle={{ color: '#fff' }}
+                                trigger="hover" 
+                                shared={true}
+                                formatter={(value: any, name: any) => {
+                                    const numValue = Number(value);
+                                    if (isNaN(numValue)) return [value, name];
+
+                                    const formattedValue = numValue.toLocaleString('en-US', {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                    });
+                                    
+                                    // คืนค่าแบบ 2 ตำแหน่งใน Array: [Value, Name]
+                                    return [formattedValue, name]; 
+                                }}
+                        
+                            
+                            />
+                            <Legend />
+                            <Bar dataKey="data_remaining_tank_Store" fill={`${tank.chartColor1}`}  name={tank.key_value} >
+                            {/* <LabelList dataKey="main_volume" position="top" /> */}
+                            </Bar>
+
+                        </BarChart>
+                     </ResponsiveContainer>  
+                ) : (
+                <div className={`flex justify-center items-center w-full h-full ${tank.ColorHeaderChart} text-2xl`}>
+                    No data
+                </div>
+                )}
+                </ChartContainer>
+            
+            {/* Overlay สีดำจางๆ เมื่อกดเต็มจอ เพื่อป้องกันการกดปุ่มด้านหลัง */}
+            {isFullscreen && <div className="fixed inset-0 bg-black/50 z-[9990]" onClick={toggleFullscreen}></div>}
+        </div>
+    );
+};
+
 export const ChartPieUsed: React.FC<{ tank: IF_ChartPieUsed }> = ({ tank }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // console.log("Pie data >> ",tank)
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+    
+
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
 
     const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
         title, 
@@ -372,6 +650,11 @@ export const ChartlineUsed: React.FC<{ tank: IF_ChartlineUsed }> = ({ tank }) =>
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
+    const isDarkMode = useDarkMode();
+
+    // ตัวอย่างการนำไปใช้ส่งค่าให้ Recharts
+    const colorChart = isDarkMode ? '#F1F5F9' : '#000000';
+
     const ChartContainer: React.FC<{ title: string; children: React.ReactNode; className?: string, chartClassName?: string }> = ({ 
         title, 
         children, 
@@ -427,8 +710,8 @@ export const ChartlineUsed: React.FC<{ tank: IF_ChartlineUsed }> = ({ tank }) =>
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={tank.Data}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis dataKey="name" stroke={tank.ColorChart} fontSize={12} />
-                        <YAxis stroke={tank.ColorChart} fontSize={12} 
+                        <XAxis dataKey="name" stroke={colorChart} fontSize={12} />
+                        <YAxis stroke={colorChart} fontSize={12} 
                         tickFormatter={(value) => 
                             new Intl.NumberFormat('en-US', {
                             minimumFractionDigits: 0,
