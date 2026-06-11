@@ -63,7 +63,7 @@ export function Header() {
 
       <div className="max-xl:hidden">
         <p className="mb-0.5 text-heading-6 text-center font-bold text-dark dark:text-white">
-          Dashboard Monitoring Sysem
+          Dashboard Monitoring System
         </p>
         {/* <img src="/images/logo/logo-wgc.png" alt="WGC Logo" /> */}
         {/* <p className="font-medium">World's Best Hydrolyzed Starch</p> */}
