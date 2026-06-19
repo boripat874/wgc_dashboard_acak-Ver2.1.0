@@ -76,8 +76,11 @@ export const CardOverview = async (c) => {
 
                     const System_Data_Fill = item.Fill_Kg_N || 0;
                     const System_Data_Density = item.Density_N || 1;
+                    // const System_Data_Density = densityNaOH;
                     const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
                     const System_Data_Density_lastday = rows.Density_N || 1;
+                    // const System_Data_Density_lastday = densityNaOH;
+
 
                     const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
                     const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
@@ -128,6 +131,7 @@ export const CardOverview = async (c) => {
                 }else{
                     const System_Data_Fill = item.Fill_Kg_N || 0;
                     const System_Data_Density = item.Density_N || 1;
+                    // const System_Data_Density = densityNaOH;
 
                     const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
                     const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
@@ -201,8 +205,10 @@ export const CardOverview = async (c) => {
 
                     const System_Data_Fill = item.Fill_Kg_H || 0;
                     const System_Data_Density = item.Density_H || 1;
+                    // const System_Data_Density = densityHCI;
                     const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
                     const System_Data_Density_lastday = rows.Density_H || 1;
+                    // const System_Data_Density_lastday = densityHCI;
 
                     const data_tank1 = ((((item.LT_PV_m3_LT_101H || 0) + 0.8)));
                     const data_tank2 = ((((item.LT_PV_m3_LT_102H || 0) + 0.8)));
@@ -372,6 +378,8 @@ export const chartFillOverview = async (c) => {
 
                 const System_Data_Fill = item.Fill_Kg_N || 0;
                 const System_Data_Density = item.Density_N || 1;
+                // const System_Data_Density = densityNaOH;
+
 
                 item.data_fill = System_Data_Fill;
 
@@ -445,6 +453,8 @@ export const chartFillOverview = async (c) => {
 
                 const System_Data_Fill = item.Fill_Kg_H || 0;
                 const System_Data_Density = item.Density_H || 1;
+                // const System_Data_Density = densityHCI;
+
 
                 item.data_fill = System_Data_Fill;
 
@@ -1056,6 +1066,9 @@ export const reprotoverview = async (c) => {
 
         const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp
 
+        const densityNaOH = Number(c.req.query('densityNaOH')) || 1;
+        const densityHCI = Number(c.req.query('densityHCI')) || 1;
+
         const data_NaOH_ = await db('ScadaDataLogAlkaline')
             .select('*')
             .where('UnixTimestamp', '>=', timestamp.startTimestamp)
@@ -1101,9 +1114,11 @@ export const reprotoverview = async (c) => {
                 // console.log("rows >>:", rows);
 
                 const System_Data_Fill = item.Fill_Kg_N || 0;
-                const System_Data_Density = item.Density_N || 1;
+                // const System_Data_Density = item.Density_N || 1;
+                const System_Data_Density = densityNaOH;
                 const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
-                const System_Data_Density_lastday = rows.Density_N || 1;
+                const System_Data_Density_lastday = densityNaOH;
+                // const System_Data_Density_lastday = rows.Density_N || 1;
 
                 // const C1_N = 4;
                 // const C2_N = 50;
@@ -1266,9 +1281,12 @@ export const reprotoverview = async (c) => {
                 // console.log("rows >>:", rows);
 
                 const System_Data_Fill = item.Fill_Kg_H || 0;
-                const System_Data_Density = item.Density_H || 1;
+                // const System_Data_Density = item.Density_H || 1;
+                const System_Data_Density = densityHCI;
                 const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
-                const System_Data_Density_lastday = rows.Density_H || 1;
+                // const System_Data_Density_lastday = rows.Density_H || 1;
+                const System_Data_Density_lastday = densityHCI;
+
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1472,6 +1490,14 @@ export const reprotoverview = async (c) => {
 
             return item;
         });
+
+        // console.log({
+        //     period_Display: `${final_results.length == 0 ? "-" : final_results.length} Day`,
+        //     start_timeDisplay: final_results[0]?.dateTime || "--",
+        //     end_timeDisplay: final_results[final_results.length - 1]?.dateTime || '--',
+        //     total: final_results.length,
+        //     result: final_results 
+        // })
 
         // const final_items = promises_.filter(item => item !== null);
         return resolve({ 

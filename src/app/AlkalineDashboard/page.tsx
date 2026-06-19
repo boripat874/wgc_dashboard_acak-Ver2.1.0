@@ -382,6 +382,7 @@ export default function AlkalineDashboard() {
             <ChartMix
               tank = {{
                 Iitlename: "NaOH & RO Used in Mixer (Liter) TANK 3",
+                subTitle: "ผสมเข้า",
                 key_value:"NaOH",
                 Data: alkaliRoMixData,
                 ColorChart: ColorChart,
@@ -400,6 +401,7 @@ export default function AlkalineDashboard() {
               tank = {{
                 Iitlename: "คงเหลือ NaOH Mixer (Liter) TANK 3",
                 key_value:"NaOH",
+                subTitle: "",
                 Data: alkaliTankMixData,
                 ColorChart: ColorChart,
                 bgColorChartContainer: bgColorChartContainer,
@@ -416,6 +418,7 @@ export default function AlkalineDashboard() {
             <CharttankStore
               tank = {{
                 Iitlename: "คงเหลือ NaOH Store (Liter) TANK 4",
+                subTitle: "",
                 key_value:"NaOH",
                 Data: alkaliTankStoreData,
                 ColorChart: ColorChart,
@@ -432,7 +435,8 @@ export default function AlkalineDashboard() {
             {/* Alkali Used */}
             <ChartPieUsed
               tank = {{
-                Iitlename: "PD1 PD2 PD3 NaOH Used (Liter)",
+                Iitlename: "PD1 PD2 PD3 NaOH Used (Liter) ",
+                subTitle: "สัดส่วนที่ใช้ไปจาก Tank Store",
                 key_value:"NaOH",
                 Data: alkaliPieData,
                 ColorChart: ColorChart,
@@ -450,6 +454,7 @@ export default function AlkalineDashboard() {
             <ChartlineUsed
               tank = {{
                 Iitlename: "PD1 NaOH Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"NaOH",
                 Data: pd1AlkaliLineConsumedData,
                 ColorChart: ColorChart,
@@ -462,6 +467,7 @@ export default function AlkalineDashboard() {
             <ChartlineUsed
               tank = {{
                 Iitlename: "PD2 NaOH Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"NaOH",
                 Data: pd2AlkaliLineConsumedData,
                 ColorChart: ColorChart,
@@ -474,6 +480,7 @@ export default function AlkalineDashboard() {
             <ChartlineUsed
               tank = {{
                 Iitlename: "PD3 NaOH Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"NaOH",
                 Data: pd3AlkaliLineConsumedData,
                 ColorChart: ColorChart,

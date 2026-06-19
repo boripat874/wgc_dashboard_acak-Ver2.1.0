@@ -72,6 +72,8 @@ var data: Data[] = [];
 export default async function Forms0(
   setPdfPreviewUrl: (pdfDataUri: string) => void, 
   plantName: string,
+  densityNaOH: number,
+  densityHCI: number,
   unit: string = "kg",
   tank: string = "12",
   aggregation: string = "perday",
@@ -98,7 +100,7 @@ export default async function Forms0(
 
     const apiUrl =  "reportoverview";
 
-      await fetcher(`/api/${apiUrl}?period=${period}&date_start=${date_start}&date_end=${date_end}`
+      await fetcher(`/api/${apiUrl}?densityNaOH=${densityNaOH}&densityHCI=${densityHCI}&period=${period}&date_start=${date_start}&date_end=${date_end}`
     )
     .then((datareponse) => {
       
@@ -112,11 +114,14 @@ export default async function Forms0(
 
       // ตรวจสอบว่า datareponse และ datareponse.result มีค่าอยู่จริง
       if (datareponse && datareponse.result) {
+
         data = datareponse.result;
         period_Display = datareponse.period_Display;
         start_timeDisplay = datareponse.start_timeDisplay;
         end_timeDisplay = datareponse.end_timeDisplay;
+
       } else {
+
         // กรณีไม่มีข้อมูล ให้กำหนดเป็น Array ว่าง หรือจัดการตามเหมาะสม
         data = [];
         console.warn("API returned empty or invalid data:", datareponse);
@@ -127,6 +132,7 @@ export default async function Forms0(
           title: 'ไม่พบข้อมูล',
           text: 'ในช่วงเวลาที่เลือกไม่มีข้อมูลการใช้งาน',
         });
+
       }
 
       return;

@@ -862,7 +862,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .report-choose{
-  @apply  w-[100%] grid grid-cols-1 xl:grid-cols-3 justify-end items-end  gap-2 text-base
+  @apply  w-[100%] grid grid-cols-1 xl:grid-cols-4 justify-end items-end  gap-2 text-base
 }
 
 .report-choose-label{

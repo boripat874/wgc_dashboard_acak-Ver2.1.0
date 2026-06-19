@@ -3,12 +3,15 @@ import React from 'react';
 import { DateRangePicker } from "@heroui/react"; // ตรวจสอบว่าลง package นี้แล้ว
 import { parseDate } from "@internationalized/date";
 import { addDays, subDays, startOfMonth, startOfYear, format, subMonths } from 'date-fns';
+import { useState, useEffect } from 'react';
 
 interface SectionChooseProps {
   valueName?: string;
   plantName: string;
   sectionName: string;
   title: string;
+  densityNaOH?: number;
+  densityHCI?: number;
   tank?: string;
   unit?: string;
   plantUse?: string;
@@ -18,6 +21,8 @@ interface SectionChooseProps {
   date_end: string;
   onClickPDF: () => void;
   onClickCSV: () => void;
+  onChangeDensityNaOH?: (val: number) => void;
+  onChangeDensityHCI?: (val: number) => void;
   onOpenModal?: () => void;
   onChangeValueName?: (val: string) => void;
   onChangeTank?: (val: string) => void;
@@ -33,6 +38,8 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
   plantName,
   sectionName,
   title,
+  densityNaOH,
+  densityHCI,
   tank,
   unit,
   aggregation,
@@ -41,6 +48,8 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
   date_end,
   onClickPDF,
   onClickCSV,
+  onChangeDensityNaOH,
+  onChangeDensityHCI,
   onChangeTank,
   onChangeUnit,
   onChangeAggregation,
@@ -50,7 +59,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
   onChangePlantUse,
   plantUse
 }) => {
-  
+   
   // Logic สำหรับเปลี่ยนวันที่อัตโนมัติตาม Period ที่เลือก
   const handlePeriodChange = (val: string) => {
     if (onChangePeriod) onChangePeriod(val);
@@ -83,6 +92,19 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
         onChangeDate_start(format(start, "yyyy-MM-dd"));
     }
   };
+
+  // 1. เพิ่ม Local State สำหรับเก็บค่าที่กำลังพิมพ์ชั่วคราว
+  const [localDensityNaOH, setLocalDensityNaOH] = useState<string | number>(densityNaOH ?? '');
+  const [localDensityHCI, setLocalDensityHCI] = useState<string | number>(densityHCI ?? '');
+
+  // 2. คอย Sync ค่าจาก Props เผื่อฝั่ง Parent มีการเปลี่ยนค่าจากข้างนอก
+  useEffect(() => {
+    setLocalDensityNaOH(densityNaOH ?? '');
+  }, [densityNaOH]);
+
+  useEffect(() => {
+    setLocalDensityHCI(densityHCI ?? '');
+  }, [densityHCI]);
  
   return (
     // เอา overflow-hidden ออก เพื่อไม่ให้ DatePicker ถูกตัด หรือไปทับขอบ
@@ -94,6 +116,61 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
       </div>
 
       <div className="report-choose p-4 pb-1 flex flex-col gap-4">
+
+        {plantName === 'Overview' && (
+
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-800 dark:text-gray-4">Density NaOH</label>
+
+              <input 
+                type="number" 
+                className='border border-gray-300 dark:border-gray-600 dark:text-gray-4 rounded p-2 text-sm'
+                // value={densityNaOH}
+                // onChange={(e) => onChangeDensityNaOH && onChangeDensityNaOH(Number(e.target.value))} // อัปเดตเฉพาะในเครื่องก่อน
+                // onKeyDown={(e) => {
+                //   if (e.key === 'Enter' && onChangeDensityNaOH) {
+                //     onChangeDensityNaOH(Number(e.currentTarget.value)); // ส่งค่าไปให้ Parent เมื่อกด Enter
+                //   }
+                // }}
+                value={localDensityNaOH}
+                onChange={(e) => setLocalDensityNaOH(e.target.value)} // อัปเดตเฉพาะในเครื่องก่อน
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && onChangeDensityNaOH) {
+                    onChangeDensityNaOH(Number(e.currentTarget.value)); // ส่งค่าไปให้ Parent เมื่อกด Enter
+                  }
+                }}
+                placeholder="Press Enter to apply"
+              />
+              
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-800 dark:text-gray-4">Density HCI</label>
+
+              <input 
+                type="number" 
+                className='border border-gray-300 dark:border-gray-600 dark:text-gray-4 rounded p-2 text-sm'
+                // value={densityHCI}
+                // onChange={(e) => onChangeDensityHCI && onChangeDensityHCI(Number(e.target.value))} // อัปเดตเฉพาะในเครื่องก่อน
+                // onKeyDown={(e) => {
+                //   if (e.key === 'Enter' && onChangeDensityHCI) {
+                //     onChangeDensityHCI(Number(e.currentTarget.value)); // ส่งค่าไปให้ Parent เมื่อกด Enter
+                //   }
+                // }}
+                value={localDensityHCI}
+                onChange={(e) => setLocalDensityHCI(e.target.value)} // อัปเดตเฉพาะในเครื่องก่อน
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && onChangeDensityHCI) {
+                    onChangeDensityHCI(Number(e.currentTarget.value)); // ส่งค่าไปให้ Parent เมื่อกด Enter
+                  }
+                }}
+                placeholder="Press Enter to apply"
+              />
+              
+            </div>
+          </>
+        )}
 
         {/* Row 1: Tank Selector (Only for Received) */}
         {/* {sectionName === 'Received' && (
@@ -215,7 +292,7 @@ const SectionChoose: React.FC<SectionChooseProps> = ({
       </div>
  
       {/* Buttons: ย้ายมาอยู่ด้านล่างสุดและจัดกึ่งกลาง */}
-      <div className="mt-0 p-4 pt-0 flex flex-row justify-end gap-2">
+      <div className="mt-0 p-4 pt-2 flex flex-row justify-end gap-2">
         <div 
           className="w-[100px] bg-gray-200 hover:bg-[#2e2d2d] hover:text-gray-200 dark:bg-gray-600 text-[#2e2d2d] dark:text-gray-4 text-center  py-2  rounded cursor-pointer hover:bg-opacity-90 font-bold text-xs shadow-sm"
           onClick={onClickPDF}

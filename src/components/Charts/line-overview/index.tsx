@@ -8,6 +8,7 @@ import { standardFormat } from "@/lib/format-number";
 import { cn } from "@/lib/utils";
 import {getFillOverviewData, getStoreOverviewData, getUsedOverviewData} from "@/services/charts.services";
 import { FillOverviewChart } from "./chart";
+import { Span } from "next/dist/trace";
 
 type PropsType = {
   timeFrame?: string;
@@ -36,7 +37,11 @@ export async function LineOverview({
     due: rawData?.due ?? []
   };
 
-  const title = department === "fill" ? "Fill Overview" : department === "store" ? "Store Overview" : department === "used" ? "Used Overview" : "???? Overview";
+  const title = department === 
+    "fill" ? 
+      "Fill Overview" : department === "store" ? 
+        "Store Overview" : department === "used" ? 
+          "Used Overview" : "???? Overview";
 
   const sectionkey = department === "fill" ? "fill_overview" : department === "store" ? "store_overview" : department === "used" ? "used_overview" : "????_overview";
 
@@ -67,7 +72,11 @@ export async function LineOverview({
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
-          {title}
+          {title} 
+          {department === "fill" &&(<span className="text-sm font-normal"> ค่าที่กรอกช่วงที่ Fill</span>)}
+          {department === "store" &&(<span className="text-sm font-normal"> ผลต่างระหว่างวันของ Mixer + Store</span>)}
+          {department === "used" &&(<span className="text-sm font-normal"> ใช้ไปจาก Tank Store</span>)}
+
         </h2>
  
         <PeriodPicker defaultValue={timeFrame} sectionKey={sectionkey} fixedDate={fixedDate} />
@@ -75,22 +84,34 @@ export async function LineOverview({
 
       <FillOverviewChart data={data} />
 
-      <dl className="grid divide-stroke text-center dark:divide-dark-3 sm:grid-cols-2 sm:divide-x [&>div]:flex [&>div]:flex-col-reverse [&>div]:gap-1">
+      {department !== "store" &&(
+        <dl className="grid divide-stroke text-center dark:divide-dark-3 sm:grid-cols-2 sm:divide-x [&>div]:flex [&>div]:flex-col-reverse [&>div]:gap-1">
 
         <div className="dark:border-dark-3 max-sm:mb-3 max-sm:border-b max-sm:pb-3">
           <dt className="text-xl font-bold text-dark dark:text-white">
             {standardFormat(data.received?.reduce((acc, curr) => acc + (curr.y || 0), 0) ?? 0)}
           </dt>
-          <dd className="font-medium dark:text-dark-6">Total NaOH Fill</dd>
+          <dd className="font-medium dark:text-dark-6">Total NaOH
+              {/* {department === "store" &&(
+                <span> ผลต่างระหว่างวัน</span>
+              )} */}
+          </dd>
         </div>
 
         <div>
           <dt className="text-xl font-bold text-dark dark:text-white">
             {standardFormat(data.due?.reduce((acc, curr) => acc + (curr.y || 0), 0) ?? 0)}
           </dt>
-          <dd className="font-medium dark:text-dark-6">Total HCI Fill</dd>
+          <dd className="font-medium dark:text-dark-6">Total HCI
+            {/* {department === "store" &&(
+                <span> ผลต่างระหว่างวัน</span>
+              )} */}
+          </dd>
         </div>
       </dl>
+      )}
+
+      
       
     </div>
   );

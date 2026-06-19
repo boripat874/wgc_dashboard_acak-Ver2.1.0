@@ -32,6 +32,9 @@ export function OverviewCard({ label, data, Icon }: PropsType) {
           </div>
 
           <div className="text-lg font-medium bg-gradient-to-r from-black dark:from-white to-[#e0764c] bg-clip-text text-transparent">{label}</div>
+          {data.action == "fill" && <p className="text-xs">ค่าที่กรอกช่วงที่ Fill</p>}
+          {data.action == "store" && <p className="text-xs">ผลต่างระหว่างวันของ Mixer + Store</p>}
+          {data.action == "used" && <p className="text-xs">ใช้ไปจาก Tank Store</p>}
         </div>
 
         

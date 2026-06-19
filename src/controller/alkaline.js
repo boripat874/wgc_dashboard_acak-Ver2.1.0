@@ -1170,20 +1170,24 @@ export const reportnaohmixed = async (c) => {
             item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
             // col B
+            item.Count_mix = (item.Count_mix_N || 0);
+
+
+            // col C
             const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
             item.Total_ALL_FT_101 = Total_ALL_FT_101;
 
-            // col C
+            // col D
             const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
             item.Total_ALL_FT_201 = Total_ALL_FT_201;
 
             const Total_ALL_FT_101_lastday = (rows.Aka_Total_ALL_FT_101N || 0);
             const Total_ALL_FT_201_lastday = (rows.Aka_Total_ALL_FT_201N || 0);
 
-            // col D
+            // col E
             item.chemical_between_day = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
 
-            // col E
+            // col F
             item.ro_between_day = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
             
             // col G
@@ -1192,19 +1196,19 @@ export const reportnaohmixed = async (c) => {
 
             item.data_remaining_tank_Mix = data_remaining_tank_Mix;
 
-            // col G
+            // col H
             const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301N || 0;
             const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + constant_tank3_Mix) * 1000;
 
             item.tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
 
-            // col H
+            // col I
             const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
             const data_remaining_tank_Store = (LT_PV_m3_LT_401 + constant_tank4_Store) * 1000;
 
             item.data_remaining_tank_Store = data_remaining_tank_Store;
 
-            // col I
+            // col J
             const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
             const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + constant_tank4_Store) * 1000;
 

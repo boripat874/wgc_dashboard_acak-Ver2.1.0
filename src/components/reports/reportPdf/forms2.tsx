@@ -25,6 +25,7 @@ applyPlugin(jsPDF);
 
 interface Data {
   dateTime:string;
+  Count_mix: number;
   Total_ALL_FT_101: number;
   Total_ALL_FT_201: number;
   chemical_between_day: number;
@@ -181,6 +182,7 @@ export default async function Forms2(
           return { 
             // ...item, 
             dateTime: newDate, 
+            Count_mix: Number(item.Count_mix).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
             Total_ALL_FT_101: Number(item.Total_ALL_FT_101).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             Total_ALL_FT_201: Number(item.Total_ALL_FT_201).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             chemical_between_day: Number(item.chemical_between_day).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -683,6 +685,7 @@ export default async function Forms2(
           // Define columns and rows for the table
           const tableColumn = [
             "วันที่", 
+            "รอบการผสม \n(ครั้ง)",
             `ตัวเลขมิเตอร์ (${nameTank1})\n${plantName_} (${C2}%) (L)`, 
             `ตัวเลขมิเตอร์ (${nameTank2})\nนํ้า RO (L)`, 
             `ผลต่างมิเตอร์ระหว่างวัน (${nameTank1}) ${plantName_} (${C2}%)\n (L)`, 
@@ -696,6 +699,7 @@ export default async function Forms2(
           const tableRows = datatable.map((item) => [ 
             
             item.dateTime, 
+            item.Count_mix,
             item.Total_ALL_FT_101, 
             item.Total_ALL_FT_201, 
             item.chemical_between_day,

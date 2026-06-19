@@ -15,6 +15,8 @@ import { OverviewCardsSkeleton } from "../_components/skeleton";
 export default function Page() {
 
     // 1. Received
+    const [densityNaOH, setDensityNaOH] = useState(1);
+    const [densityHCI, setDensityHCI] = useState(1);
     const [alkRecTank, setAlkRecTank] = useState("--");
     const [alkRecUnit, setAlkRecUnit] = useState("--");
     const [alkRecAgg, setAlkRecAgg] = useState("--");
@@ -30,8 +32,8 @@ export default function Page() {
         if (!reportOpen) {
             const timer = setTimeout(() => {
 
-                // Forms1(renderReport, "Alkaline", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
-                Forms0(renderReport, "Overview", "kg", "-", "perday", "1day", format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd'))
+                // Forms1(renderReport, "Overview", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
+                Forms0(renderReport, "Overview",densityNaOH, densityHCI, "kg", "-", "perday", "1day", format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd'))
                 
             }, 1000); // ปิดหลังจาก 1 วินาที
 
@@ -40,10 +42,10 @@ export default function Page() {
         
         if (alkRecPeriod !== "--") {
             // console.log("Tank:", alkRecTank, "Unit:", alkRecUnit, "Agg:", alkRecAgg, "Period:", alkRecPeriod, "Start:", alkRecStart, "End:", alkRecEnd);
-            Forms0(renderReport, "Overview", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
+            Forms0(renderReport, "Overview", densityNaOH, densityHCI, alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)
         }
 
-    }, [alkRecTank, alkRecUnit, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd]);
+    }, [densityNaOH, densityHCI, alkRecTank, alkRecUnit, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd]);
 
     // Report Handlers
     const renderReport = (url: string) => {
@@ -75,9 +77,25 @@ export default function Page() {
                 <h1>Report Overview</h1>
 
                 <SectionChoose 
-                    plantName="Overview" sectionName="Overview" title="Overview"
-                    tank={alkRecTank} unit={alkRecUnit} aggregation={alkRecAgg} period={alkRecPeriod} date_start={alkRecStart} date_end={alkRecEnd}
-                    onChangeTank={setAlkRecTank} onChangeUnit={setAlkRecUnit} onChangeAggregation={setAlkRecAgg} onChangePeriod={setAlkRecPeriod} onChangeDate_start={setAlkRecStart} onChangeDate_end={setAlkRecEnd}
+                    plantName="Overview" 
+                    sectionName="Overview" 
+                    title="Overview"
+                    tank={alkRecTank} 
+                    densityNaOH={densityNaOH}
+                    densityHCI={densityHCI}
+                    unit={alkRecUnit} 
+                    aggregation={alkRecAgg} 
+                    period={alkRecPeriod} 
+                    date_start={alkRecStart} 
+                    date_end={alkRecEnd}
+                    onChangeDensityNaOH={setDensityNaOH} 
+                    onChangeDensityHCI={setDensityHCI} 
+                    onChangeTank={setAlkRecTank} 
+                    onChangeUnit={setAlkRecUnit} 
+                    onChangeAggregation={setAlkRecAgg} 
+                    onChangePeriod={setAlkRecPeriod} 
+                    onChangeDate_start={setAlkRecStart} 
+                    onChangeDate_end={setAlkRecEnd}
                     onClickPDF={() => downloadReport(pdfUrl || '')}
                     onClickCSV={() => Forms0csv("Overview", alkRecUnit, alkRecTank, alkRecAgg, alkRecPeriod, alkRecStart, alkRecEnd)}
                 />  

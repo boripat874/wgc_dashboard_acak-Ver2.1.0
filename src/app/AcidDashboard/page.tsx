@@ -391,6 +391,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             <ChartMix
               tank = {{
                 Iitlename: "HCI & RO Used in Mixer (Liter) TANK 3",
+                subTitle: "ผสมเข้า",
                 key_value:"HCI",
                 Data: acidRoMixData,
                 ColorChart: ColorChart,
@@ -406,6 +407,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           <CharttankMix
             tank = {{
               Iitlename: "คงเหลือ HCI Mixer (Liter) TANK 3",
+              subTitle: "",
               key_value:"HCI",
               Data: acidTankMixedData,  
               ColorChart: ColorChart,
@@ -419,6 +421,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           <CharttankStore
             tank = {{
               Iitlename: "คงเหลือ HCI Store (Liter) TANK 4",
+              subTitle: "",
               key_value:"HCI",
               Data: acidTankStoreData,
               ColorChart: ColorChart,
@@ -435,6 +438,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             <ChartPieUsed
               tank = {{
                 Iitlename: "PD1 PD2 PD3 ES HCI Used (Liter)",
+                subTitle: "สัดส่วนที่ใช้ไปจาก Tank Store",
                 key_value:"HCI",
                 Data: acidPieData,
                 ColorChart: ColorChart,
@@ -451,7 +455,8 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
           
             <ChartlineUsed
               tank = {{
-                Iitlename: "PD1 HCI Used (Liter)",
+                Iitlename: "PD1 HCI Used (Liter) ",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"HCI",
                 Data: pd1AcidLineConsumedData,
                 ColorChart: ColorChart,
@@ -464,6 +469,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             <ChartlineUsed
               tank = {{
                 Iitlename: "PD2 HCI Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"HCI",
                 Data: pd2AcidLineConsumedData,
                 ColorChart: ColorChart,
@@ -476,6 +482,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             <ChartlineUsed
               tank = {{
                 Iitlename: "PD3 HCI Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"HCI",
                 Data: pd3AcidLineConsumedData,
                 ColorChart: ColorChart,
@@ -488,6 +495,7 @@ export default function AlkalineDashboard({ searchParams }: PropsType) {
             <ChartlineUsed
               tank = {{
                 Iitlename: "ES HCI Used (Liter)",
+                subTitle: "ที่ใช้ไปจาก Tank Store",
                 key_value:"HCI",
                 Data: esAcidLineConsumedData,
                 ColorChart: ColorChart,
