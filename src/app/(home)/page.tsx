@@ -52,8 +52,6 @@ export default async function Home({ searchParams }: PropsType) {
           fixedDate={2}
         />
 
-        
-
         <LineOverview
           className="col-span-12 xl:col-span-12"
           key={`used-${usedTimeFrame}`}

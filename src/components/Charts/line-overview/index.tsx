@@ -51,7 +51,7 @@ export async function LineOverview({
       ? "store_overview" 
       : department === "used" 
         ? "used_overview" 
-        : "fill_overview";
+        : "used_overview";
 
   return (
     <div
