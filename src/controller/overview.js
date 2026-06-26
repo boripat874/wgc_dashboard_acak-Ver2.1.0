@@ -23,24 +23,23 @@ export const CardOverview = async (c) => {
 
             const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp
 
-            const aggregation  =  c.req.query('period') || 'today'; // รับค่าการจัดกลุ่มจาก query parameter
+            // const aggregation  =  c.req.query('period') || 'today'; // รับค่าการจัดกลุ่มจาก query parameter
 
             // console.log(timestamp);
             
-            const data_NaOH_ = await db('ScadaDataLogAlkaline')
-            .select('*')
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // 1. ดึงข้อมูลหลัก (แยกฟังก์ชันออกมาเพื่อให้จัดการง่าย)
+            const [data_NaOH_, data_HCI_] = await Promise.all([
 
-            // console.log("data_NaOH_ >>:", data_NaOH_);
+                db('ScadaDataLogAlkaline')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc'),
 
-
-            const data_HCI_ = await db('ScadaDataLogAcid')
-            .select('*')
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+                db('ScadaDataLogAcid')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc')
+            ]);
 
             //======================================================================= result NaOH_ =======================================================================
 
@@ -62,25 +61,68 @@ export const CardOverview = async (c) => {
                 const prevStartSec = Math.floor(prevStart.getTime() / 1000);
                 const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
+
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
+
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
+
+
                 // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-                const rows = await db('ScadaDataLogAlkaline')
+                const prevrows = await db('ScadaDataLogAlkaline')
                     .select("*")
                     .where('UnixTimestamp', '>=', prevStartSec)
                     .where('UnixTimestamp', '<=', prevEndSec)
                     .orderBy('UnixTimestamp', 'desc')
                     .first(); // เอาแถวล่าสุดแถวเดียว
 
-                if (rows) {
+                const nextrows = await db('ScadaDataLogAlkaline')
+                    .select("*")
+                    .where('UnixTimestamp', '>=', nextStartSec)
+                    .where('UnixTimestamp', '<=', nextEndSec)
+                    .orderBy('UnixTimestamp', 'desc')
+                    .first(); // เอาแถวล่าสุดแถวเดียว
+
+                if(nextrows){
+
+                    // const System_Data_Density = densityNaOH;
+                    const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
+                    
+                    //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+                    item.data_fill = System_Data_Fill_nextday;
+
+                    const Aka_Total_ALL_FT_401N = (nextrows.Aka_Total_ALL_FT_401N || 0) - (item.Aka_Total_ALL_FT_401N || 0);
+                    const Aka_Total_ALL_FT_402N = (nextrows.Aka_Total_ALL_FT_402N || 0) - (item.Aka_Total_ALL_FT_402N || 0);
+                    const Aka_Total_ALL_FT_403N = (nextrows.Aka_Total_ALL_FT_403N || 0) - (item.Aka_Total_ALL_FT_403N || 0);
+                    // const Aka_Total_ALL_FT_501N = (nextrows.Aka_Total_ALL_FT_501N || 0) - (item.Aka_Total_ALL_FT_501N || 0);
+
+                    //===  Total NaOH Used today
+                    item.data_used = (Aka_Total_ALL_FT_401N + Aka_Total_ALL_FT_402N + Aka_Total_ALL_FT_403N);
+
+                }else{
+                    const System_Data_Fill = 0;
+
+                    item.data_fill = System_Data_Fill;
+                    item.data_used = 0;
+                }
+
+                if (prevrows) {
 
                     // console.log("rows >>:", rows);
 
                     const System_Data_Fill = item.Fill_Kg_N || 0;
                     const System_Data_Density = item.Density_N || 1;
                     // const System_Data_Density = densityNaOH;
-                    const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
-                    const System_Data_Density_lastday = rows.Density_N || 1;
+                    // const System_Data_Fill_lastday = prevrows.Fill_Kg_N || 0;
+                    const System_Data_Density_lastday = prevrows.Density_N || 1;
                     // const System_Data_Density_lastday = densityNaOH;
-
 
                     const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
                     const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
@@ -95,53 +137,50 @@ export const CardOverview = async (c) => {
 
                     const data_remaining_tank_fill_formula = data_remaining_tank_fill * System_Data_Density;
                     
-                    const data_tank1_lastday = ((((rows.LT_PV_m3_LT_101N || 0) + 0.8)));
-                    const data_tank2_lastday = ((((rows.LT_PV_m3_LT_102N || 0) + 0.8)));
+                    const data_tank1_lastday = ((((prevrows.LT_PV_m3_LT_101N || 0) + 0.8)));
+                    const data_tank2_lastday = ((((prevrows.LT_PV_m3_LT_102N || 0) + 0.8)));
 
                     const data_remaining_tank_fill_lastday = ((data_tank1_lastday + data_tank2_lastday) * 1000);
 
                     const data_remaining_tank_fill_lastday_formula = data_remaining_tank_fill_lastday * System_Data_Density_lastday;
                     
-                    item.Fill_between_day =  (data_remaining_tank_fill_lastday_formula + System_Data_Fill_lastday) - data_remaining_tank_fill_formula;
+                    item.Fill_between_day =  data_remaining_tank_fill_lastday_formula - data_remaining_tank_fill_formula;
 
-                    //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
-                    item.data_fill = System_Data_Fill;
-
-                    const LT_PV_m3_LT_301N_lastday = rows.LT_PV_m3_LT_301N || 0;
+                    const LT_PV_m3_LT_301N_lastday = prevrows.LT_PV_m3_LT_301N || 0;
                     const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301N_lastday + 0.3) * 1000;
-                    
-                    item.data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
 
-                    const LT_PV_m3_LT_401N_lastday = rows.LT_PV_m3_LT_401N || 0;
+                    const data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                    item.data_tank_Mix_between_day = data_tank_Mix_between_day;
+
+                    const LT_PV_m3_LT_401N_lastday = prevrows.LT_PV_m3_LT_401N || 0;
                     const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401N_lastday + 1.3) * 1000;
 
-                    item.data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+                    const data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                    item.data_tank_Store_between_day = data_tank_Store_between_day;
 
                     //=== Total NaOH Store today
-                    item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
-
-                    const Aka_Total_ALL_FT_401N = (item.Aka_Total_ALL_FT_401N || 0) - (rows.Aka_Total_ALL_FT_401N || 0);
-                    const Aka_Total_ALL_FT_402N = (item.Aka_Total_ALL_FT_402N || 0) - (rows.Aka_Total_ALL_FT_402N || 0);
-                    const Aka_Total_ALL_FT_403N = (item.Aka_Total_ALL_FT_403N || 0) - (rows.Aka_Total_ALL_FT_403N || 0);
-                    const Aka_Total_ALL_FT_501N = (item.Aka_Total_ALL_FT_501N || 0) - (rows.Aka_Total_ALL_FT_501N || 0);
-
-                    //===  Total NaOH Used today
-                    item.data_used = (Aka_Total_ALL_FT_401N + Aka_Total_ALL_FT_402N + Aka_Total_ALL_FT_403N + Aka_Total_ALL_FT_501N);
+                    // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_store = data_tank_Mix_between_day + data_tank_Store_between_day; 
 
                 }else{
-                    const System_Data_Fill = item.Fill_Kg_N || 0;
-                    const System_Data_Density = item.Density_N || 1;
+
+                    // const System_Data_Fill = item.Fill_Kg_N || 0;
+                    // const System_Data_Density = item.Density_N || 1;
                     // const System_Data_Density = densityNaOH;
 
-                    const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
-                    const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
 
-                    const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
-                    const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
+                    // const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
+                    // const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
 
-                    item.data_fill = System_Data_Fill;
-                    item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    // const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
+                    // const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
+
+                    // item.data_fill = System_Data_Fill;
+                    // item.data_store = 0;
                     item.data_used = 0;
+
                 }
 
                 // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
@@ -190,24 +229,68 @@ export const CardOverview = async (c) => {
                 const prevStartSec = Math.floor(prevStart.getTime() / 1000);
                 const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
-                // Query ข้อมูลจากตาราง ScadaDataLogAcid วันก่อน
-                const rows = await db('ScadaDataLogAcid')
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
+
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
+
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
+
+                // Query ข้อมูลจากตาราง ScadaDataLogAcid
+                const prevrows = await db('ScadaDataLogAcid')
                     .select("*")
                     .where('UnixTimestamp', '>=', prevStartSec)
                     .where('UnixTimestamp', '<=', prevEndSec)
                     .orderBy('UnixTimestamp', 'desc')
                     .first(); // เอาแถวล่าสุดแถวเดียว
 
+                // Query ข้อมูลจากตาราง ScadaDataLogAcid
+                const nextrows = await db('ScadaDataLogAcid')
+                    .select("*")
+                    .where('UnixTimestamp', '>=', nextStartSec)
+                    .where('UnixTimestamp', '<=', nextEndSec)
+                    .orderBy('UnixTimestamp', 'desc')
+                    .first(); // เอาแถวล่าสุดแถวเดียว
+
+                if(nextrows){
+
+                    // const System_Data_Density = densityNaOH;
+                    const System_Data_Fill_nextday = nextrows.Fill_Kg_H || 0;
                     
-                if (rows) {
+                    //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+                    item.data_fill = System_Data_Fill_nextday;
+
+                    const Aka_Total_ALL_FT_401H = (nextrows.Aka_Total_ALL_FT_401H || 0) - (item.Aka_Total_ALL_FT_401H || 0);
+                    const Aka_Total_ALL_FT_402H = (nextrows.Aka_Total_ALL_FT_402H || 0) - (item.Aka_Total_ALL_FT_402H || 0);
+                    const Aka_Total_ALL_FT_403H = (nextrows.Aka_Total_ALL_FT_403H || 0) - (item.Aka_Total_ALL_FT_403H || 0);
+                    const Aka_Total_ALL_FT_501H = (nextrows.Aka_Total_ALL_FT_501H || 0) - (item.Aka_Total_ALL_FT_501H || 0);
+
+                    //===  Total NaOH Used today
+                    item.data_used = (Aka_Total_ALL_FT_401H + Aka_Total_ALL_FT_402H + Aka_Total_ALL_FT_403H + Aka_Total_ALL_FT_501H);
+
+                }else{
+                    const System_Data_Fill = 0;
+
+                    item.data_fill = System_Data_Fill;
+                    item.data_used = 0;
+                }
+
+                    
+                if (prevrows) {
 
                     // console.log("before HCI item >>:", item);
 
                     const System_Data_Fill = item.Fill_Kg_H || 0;
                     const System_Data_Density = item.Density_H || 1;
                     // const System_Data_Density = densityHCI;
-                    const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
-                    const System_Data_Density_lastday = rows.Density_H || 1;
+                    // const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
+                    const System_Data_Density_lastday = prevrows.Density_H || 1;
                     // const System_Data_Density_lastday = densityHCI;
 
                     const data_tank1 = ((((item.LT_PV_m3_LT_101H || 0) + 0.8)));
@@ -217,14 +300,14 @@ export const CardOverview = async (c) => {
 
                     const data_remaining_tank_fill_formula = data_remaining_tank_fill * System_Data_Density;
                     
-                    const data_tank1_lastday = ((((rows.LT_PV_m3_LT_101H || 0) + 0.8)));
-                    const data_tank2_lastday = ((((rows.LT_PV_m3_LT_102H || 0) + 0.8)));
+                    const data_tank1_lastday = ((((prevrows.LT_PV_m3_LT_101H || 0) + 0.8)));
+                    const data_tank2_lastday = ((((prevrows.LT_PV_m3_LT_102H || 0) + 0.8)));
 
                     const data_remaining_tank_fill_lastday = ((data_tank1_lastday + data_tank2_lastday) * 1000);
 
                     const data_remaining_tank_fill_lastday_formula = data_remaining_tank_fill_lastday * System_Data_Density_lastday;
                     
-                    item.Fill_between_day =  (data_remaining_tank_fill_lastday_formula + System_Data_Fill_lastday) - data_remaining_tank_fill_formula;
+                    item.Fill_between_day =  data_remaining_tank_fill_lastday_formula - data_remaining_tank_fill_formula;
 
                     //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
                     item.data_fill = System_Data_Fill;
@@ -232,43 +315,39 @@ export const CardOverview = async (c) => {
                     const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
                     const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
 
-                    const LT_PV_m3_LT_301H_lastday = rows.LT_PV_m3_LT_301H || 0;
+                    const LT_PV_m3_LT_301H_lastday = prevrows.LT_PV_m3_LT_301H || 0;
                     const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301H_lastday + 0.8) * 1000;
+
+                    const data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
                     
-                    item.data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+                    item.data_tank_Mix_between_day = data_tank_Mix_between_day;
 
                     const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
                     const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
 
-                    const LT_PV_m3_LT_401H_lastday = rows.LT_PV_m3_LT_401H || 0;
+                    const LT_PV_m3_LT_401H_lastday = prevrows.LT_PV_m3_LT_401H || 0;
                     const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401H_lastday + 1.3) * 1000;
 
-                    item.data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+                    const data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                    item.data_tank_Store_between_day = data_tank_Store_between_day;
 
                     //=== Total NaOH Store today
-                    item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
-
-                    const Aka_Total_ALL_FT_401H = (item.Aka_Total_ALL_FT_401H || 0) - (rows.Aka_Total_ALL_FT_401H || 0);
-                    const Aka_Total_ALL_FT_402H = (item.Aka_Total_ALL_FT_402H || 0) - (rows.Aka_Total_ALL_FT_402H || 0);
-                    const Aka_Total_ALL_FT_403H = (item.Aka_Total_ALL_FT_403H || 0) - (rows.Aka_Total_ALL_FT_403H || 0);
-                    const Aka_Total_ALL_FT_501H = (item.Aka_Total_ALL_FT_501H || 0) - (rows.Aka_Total_ALL_FT_501H || 0);
-
-                    //===  Total NaOH Used today
-                    item.data_used = (Aka_Total_ALL_FT_401H + Aka_Total_ALL_FT_402H + Aka_Total_ALL_FT_403H + Aka_Total_ALL_FT_501H);
-
+                    // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_store = data_tank_Mix_between_day + data_tank_Store_between_day;
 
                     // console.log("after HCI item >>:", item);
 
-
                 }else{
-                    const System_Data_Fill = item.Fill_Kg_H || 0;
-                    const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
-                    const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
-                    const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
-                    const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
 
-                    item.data_fill = System_Data_Fill;
-                    item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    // const System_Data_Fill = item.Fill_Kg_H || 0;
+                    // const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
+                    // const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
+                    // const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
+                    // const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
+
+                    // item.data_fill = System_Data_Fill;
+                    // item.data_store = 0;
                     item.data_used = 0;
                 }
 
@@ -342,17 +421,33 @@ export const chartFillOverview = async (c) => {
             
             const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp  
             
-            const data_NaOH_Fill_ = await db('ScadaDataLogAlkaline')
-            .select("*")
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_NaOH_Fill_ = await db('ScadaDataLogAlkaline')
+            // .select("*")
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
 
-            const data_HCI_Fill_ = await db('ScadaDataLogAcid')
-            .select('*')
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_HCI_Fill_ = await db('ScadaDataLogAcid')
+            // .select('*')
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
+
+            // 1. ดึงข้อมูลหลัก (แยกฟังก์ชันออกมาเพื่อให้จัดการง่าย)
+            const [data_NaOH_Fill_, data_HCI_Fill_] = await Promise.all([
+
+                db('ScadaDataLogAlkaline')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc'),
+
+                db('ScadaDataLogAcid')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc')
+            ]);
+
+
 
             const aggregation  =  c.req.query('period') || 'today'; // รับค่าการจัดกลุ่มจาก query parameter
 
@@ -363,23 +458,39 @@ export const chartFillOverview = async (c) => {
 
                 const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
-                // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
-                const prevStart = new Date(baseDate);
-                prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
-                prevStart.setHours(0, 0, 0, 0);
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
 
-                // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
-                const prevEnd = new Date(baseDate);
-                prevEnd.setHours(0, 0, 0, 0);
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
 
-                // แปลงเป็น Seconds (Unix Timestamp)
-                const prevStartSec = Math.floor(prevStart.getTime() / 1000);
-                const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
 
-                const System_Data_Fill = item.Fill_Kg_N || 0;
+                const nextrows = await db('ScadaDataLogAlkaline')
+                .select("*")
+                .where('UnixTimestamp', '>=', nextStartSec)
+                .where('UnixTimestamp', '<=', nextEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+
+                // const System_Data_Fill = item.Fill_Kg_N || 0;
+                let System_Data_Fill = 0;
+
+                if(nextrows){
+
+                    System_Data_Fill = nextrows.Fill_Kg_N || 0;
+
+                }else{
+                    System_Data_Fill = 0;
+                }
+
                 const System_Data_Density = item.Density_N || 1;
                 // const System_Data_Density = densityNaOH;
-
 
                 item.data_fill = System_Data_Fill;
 
@@ -391,7 +502,6 @@ export const chartFillOverview = async (c) => {
 
             // 2. รอให้ Query ของทุก Item ทำงานเสร็จพร้อมกัน
             const final_NaOH_items = await Promise.all(naoh_promises);
-
 
             // 3. ใช้ .reduce() เพื่อรวมค่า Total ทั้งหมด (วิธีนี้ปลอดภัยและแม่นยำกว่า)
             const NaOH_Total = final_NaOH_items.reduce((acc, curr) => {
@@ -438,23 +548,35 @@ export const chartFillOverview = async (c) => {
 
                 const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
-                // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
-                const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
-                prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
-                prevStart.setHours(0, 0, 0, 0);
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
 
-                // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
-                const prevEnd = new Date(baseDate);
-                prevEnd.setHours(0, 0, 0, 0);
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
 
-                // แปลงเป็น Seconds (Unix Timestamp)
-                const prevStartSec = Math.floor(prevStart.getTime() / 1000);
-                const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
 
-                const System_Data_Fill = item.Fill_Kg_H || 0;
+                const nextrows = await db('ScadaDataLogAcid')
+                .select("*")
+                .where('UnixTimestamp', '>=', nextStartSec)
+                .where('UnixTimestamp', '<=', nextEndSec) 
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+
+                // const System_Data_Fill = item.Fill_Kg_H || 0;
+                let System_Data_Fill =  0;
+
+                if(nextrows){
+                    System_Data_Fill = nextrows.Fill_Kg_H || 0;
+                }
+
                 const System_Data_Density = item.Density_H || 1;
                 // const System_Data_Density = densityHCI;
-
 
                 item.data_fill = System_Data_Fill;
 
@@ -540,17 +662,31 @@ export const chartStoreOverview = async (c) => {
             
             const timestamp = await convertTotimestamp(c.req.query()); // แปลง timestamp  
             
-            const data_NaOH_Fill_ = await db('ScadaDataLogAlkaline')
-            .select("*")
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_NaOH_Fill_ = await db('ScadaDataLogAlkaline')
+            // .select("*")
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
 
-            const data_HCI_Fill_ = await db('ScadaDataLogAcid')
-            .select('*')
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_HCI_Fill_ = await db('ScadaDataLogAcid')
+            // .select('*')
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
+
+            // 1. ดึงข้อมูลหลัก (แยกฟังก์ชันออกมาเพื่อให้จัดการง่าย)
+            const [data_NaOH_Fill_, data_HCI_Fill_] = await Promise.all([
+
+                db('ScadaDataLogAlkaline')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc'),
+
+                db('ScadaDataLogAcid')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc')
+            ]);
 
             const aggregation  =  c.req.query('period') || 'today'; // รับค่าการจัดกลุ่มจาก query parameter
 
@@ -575,49 +711,55 @@ export const chartStoreOverview = async (c) => {
                 const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
                 // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-                // const rows = await db('ScadaDataLogAlkaline')
-                //     .select("*")
-                //     .where('UnixTimestamp', '>=', prevStartSec)
-                //     .where('UnixTimestamp', '<=', prevEndSec)
-                //     .orderBy('UnixTimestamp', 'desc')
-                //     .first(); // เอาแถวล่าสุดแถวเดียว
+                const rows = await db('ScadaDataLogAlkaline')
+                    .select("*")
+                    .where('UnixTimestamp', '>=', prevStartSec)
+                    .where('UnixTimestamp', '<=', prevEndSec)
+                    .orderBy('UnixTimestamp', 'desc')
+                    .first(); // เอาแถวล่าสุดแถวเดียว
 
-                // if (rows) {
+                if (rows) {
 
-                //     const System_Data_Fill = item.Fill_Kg_N || 0;
-                //     const System_Data_Density = item.Density_N || 1;
-                //     const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
-                //     const System_Data_Density_lastday = rows.Density_N || 1;
+                    // const System_Data_Fill = item.Fill_Kg_N || 0;
+                    // const System_Data_Density = item.Density_N || 1;
+                    // const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
+                    // const System_Data_Density_lastday = rows.Density_N || 1;
 
-                //     const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
-                //     const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
+                    const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
+                    const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
 
-                //     const LT_PV_m3_LT_301N_lastday = rows.LT_PV_m3_LT_301N || 0;
-                //     const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301N_lastday + 0.3) * 1000;
+                    const LT_PV_m3_LT_301N_lastday = rows.LT_PV_m3_LT_301N || 0;
+                    const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301N_lastday + 0.3) * 1000;
+
+                    const data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
                     
-                //     item.data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+                    item.data_tank_Mix_between_day = data_tank_Mix_between_day;
 
-                //     const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
-                //     const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
+                    const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
+                    const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
 
-                //     const LT_PV_m3_LT_401N_lastday = rows.LT_PV_m3_LT_401N || 0;
-                //     const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401N_lastday + 1.3) * 1000;
+                    const LT_PV_m3_LT_401N_lastday = rows.LT_PV_m3_LT_401N || 0;
+                    const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401N_lastday + 1.3) * 1000;
 
-                //     item.data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+                    const data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
-                //     //=== Total NaOH Store today
-                //     item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_tank_Store_between_day = data_tank_Store_between_day;
 
-                // }
+                    //=== Total NaOH Store today
+                    // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_store = data_tank_Mix_between_day + data_tank_Store_between_day;
 
-                const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
 
-                const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
+                }
 
-                //=== Total NaOH Store today
-                item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                // const LT_PV_m3_LT_301N = item.LT_PV_m3_LT_301N || 0;
+                // const data_remaining_tank_Mix = (LT_PV_m3_LT_301N + 0.3) * 1000;
+
+                // const LT_PV_m3_LT_401N = item.LT_PV_m3_LT_401N || 0;
+                // const data_remaining_tank_Store = (LT_PV_m3_LT_401N + 1.3) * 1000;
+
+                // //=== Total NaOH Store today
+                // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
 
                 // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
@@ -688,49 +830,54 @@ export const chartStoreOverview = async (c) => {
                 const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
                 // Query ข้อมูลจากตาราง ScadaDataLogAcid วันก่อน
-                // const rows = await db('ScadaDataLogAcid')
-                //     .select("*")
-                //     .where('UnixTimestamp', '>=', prevStartSec)
-                //     .where('UnixTimestamp', '<=', prevEndSec)
-                //     .orderBy('UnixTimestamp', 'desc')
-                //     .first(); // เอาแถวล่าสุดแถวเดียว
+                const rows = await db('ScadaDataLogAcid')
+                    .select("*")
+                    .where('UnixTimestamp', '>=', prevStartSec)
+                    .where('UnixTimestamp', '<=', prevEndSec)
+                    .orderBy('UnixTimestamp', 'desc')
+                    .first(); // เอาแถวล่าสุดแถวเดียว
 
-                // if (rows) {
+                if (rows) {
 
-                //     const System_Data_Fill = item.Fill_Kg_H || 0;
-                //     const System_Data_Density = item.Density_H || 1;
-                //     const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
-                //     const System_Data_Density_lastday = rows.Density_H || 1;
+                    // const System_Data_Fill = item.Fill_Kg_H || 0;
+                    // const System_Data_Density = item.Density_H || 1;
+                    // const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
+                    // const System_Data_Density_lastday = rows.Density_H || 1;
 
-                //     const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
-                //     const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
+                    const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
+                    const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
 
-                //     const LT_PV_m3_LT_301H_lastday = rows.LT_PV_m3_LT_301H || 0;
-                //     const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301H_lastday + 0.8) * 1000;
+                    const LT_PV_m3_LT_301H_lastday = rows.LT_PV_m3_LT_301H || 0;
+                    const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301H_lastday + 0.8) * 1000;
+
+                    const data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
                     
-                //     item.data_tank_Mix_between_day = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+                    item.data_tank_Mix_between_day = data_tank_Mix_between_day
 
-                //     const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
-                //     const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
+                    const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
+                    const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
 
-                //     const LT_PV_m3_LT_401H_lastday = rows.LT_PV_m3_LT_401H || 0;
-                //     const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401H_lastday + 1.3) * 1000;
+                    const LT_PV_m3_LT_401H_lastday = rows.LT_PV_m3_LT_401H || 0;
+                    const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401H_lastday + 1.3) * 1000;
 
-                //     item.data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+                    const data_tank_Store_between_day = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
-                //     //=== Total NaOH Store today
-                //     item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_tank_Store_between_day = data_tank_Store_between_day;
 
-                // }
+                    //=== Total NaOH Store today
+                    // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                    item.data_store = data_tank_Mix_between_day + data_tank_Store_between_day;
 
-                const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
+                }
 
-                const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
+                // const LT_PV_m3_LT_301H = item.LT_PV_m3_LT_301H || 0;
+                // const data_remaining_tank_Mix = (LT_PV_m3_LT_301H + 0.8) * 1000;
 
-                //=== Total NaOH Store today
-                item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
+                // const LT_PV_m3_LT_401H = item.LT_PV_m3_LT_401H || 0;
+                // const data_remaining_tank_Store = (LT_PV_m3_LT_401H + 1.3) * 1000;
+
+                // //=== Total NaOH Store today
+                // item.data_store = data_remaining_tank_Mix + data_remaining_tank_Store;
 
                 return item;
             });
@@ -747,9 +894,13 @@ export const chartStoreOverview = async (c) => {
 
                 // 2. กำหนด Key ตามเงื่อนไข
                 if (aggregation === 'thismonth') {
+
                     key = format(dateObj, 'yyyy-MM-dd'); // ผลรวมรายวัน
+
                 } else if (aggregation === 'thisyear') {
+
                     key = format(dateObj, 'yyyy-MM');    // ผลรวมรายเดือน
+
                 }else{ // aggregation === 'today'
                     
                     key = format(dateObj, 'HH:mm'); 
@@ -813,17 +964,31 @@ export const chartUsedOverview = async (c) => {
 
             const aggregation  =  c.req.query('period') || 'today'; // รับค่าการจัดกลุ่มจาก query parameter
             
-            const data_NaOH_Used = await db('ScadaDataLogAlkaline')
-            .select("*")
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_NaOH_Used = await db('ScadaDataLogAlkaline')
+            // .select("*")
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
 
-            const data_HCI_Used = await db('ScadaDataLogAcid')
-            .select("*")
-            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-            .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            // const data_HCI_Used = await db('ScadaDataLogAcid')
+            // .select("*")
+            // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            // .orderBy('UnixTimestamp', 'asc');
+
+            // 1. ดึงข้อมูลหลัก (แยกฟังก์ชันออกมาเพื่อให้จัดการง่าย)
+            const [data_NaOH_Used, data_HCI_Used] = await Promise.all([
+
+                db('ScadaDataLogAlkaline')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc'),
+
+                db('ScadaDataLogAcid')
+                .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+                .where('UnixTimestamp', '<', timestamp.endTimestamp)
+                .orderBy('UnixTimestamp', 'asc')
+            ]);
 
             // console.log("data_NaOH_Used ==>>",data_NaOH_Used)
             //======================================================================= result NaOH_Transfer_day =======================================================================
@@ -833,37 +998,50 @@ export const chartUsedOverview = async (c) => {
 
                 const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
-                // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
-                const prevStart = new Date(baseDate);
-                prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
-                prevStart.setHours(0, 0, 0, 0);
+                // // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+                // const prevStart = new Date(baseDate);
+                // prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+                // prevStart.setHours(0, 0, 0, 0);
 
-                // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
-                const prevEnd = new Date(baseDate);
-                prevEnd.setHours(0, 0, 0, 0);
+                // // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+                // const prevEnd = new Date(baseDate);
+                // prevEnd.setHours(0, 0, 0, 0);
 
-                // แปลงเป็น Seconds (Unix Timestamp)
-                const prevStartSec = Math.floor(prevStart.getTime() / 1000);
-                const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+                // // แปลงเป็น Seconds (Unix Timestamp)
+                // const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+                // const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
+
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
+
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
 
                 // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-                const rows = await db('ScadaDataLogAlkaline')
+                const nextrows = await db('ScadaDataLogAlkaline')
                     .select("*")
-                    .where('UnixTimestamp', '>=', prevStartSec)
-                    .where('UnixTimestamp', '<=', prevEndSec)
+                    .where('UnixTimestamp', '>=', nextStartSec)
+                    .where('UnixTimestamp', '<=', nextEndSec)
                     .orderBy('UnixTimestamp', 'desc')
                     .first(); // เอาแถวล่าสุดแถวเดียว
 
-                if (rows) {
+                if (nextrows) {
 
-                    const System_Data_Fill = item.Fill_Kg_N || 0;
-                    const System_Data_Density = item.Density_N || 1;
-                    const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
-                    const System_Data_Density_lastday = rows.Density_N || 1;
+                    // const System_Data_Fill = item.Fill_Kg_N || 0;
+                    // const System_Data_Density = item.Density_N || 1;
+                    // const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
+                    // const System_Data_Density_lastday = rows.Density_N || 1;
 
-                    const Aka_Total_ALL_FT_401N = (item.Aka_Total_ALL_FT_401N || 0) - (rows.Aka_Total_ALL_FT_401N || 0);
-                    const Aka_Total_ALL_FT_402N = (item.Aka_Total_ALL_FT_402N || 0) - (rows.Aka_Total_ALL_FT_402N || 0);
-                    const Aka_Total_ALL_FT_403N = (item.Aka_Total_ALL_FT_403N || 0) - (rows.Aka_Total_ALL_FT_403N || 0);
+                    const Aka_Total_ALL_FT_401N = (nextrows.Aka_Total_ALL_FT_401N || 0) - (item.Aka_Total_ALL_FT_401N || 0);
+                    const Aka_Total_ALL_FT_402N = (nextrows.Aka_Total_ALL_FT_402N || 0) - (item.Aka_Total_ALL_FT_402N || 0);
+                    const Aka_Total_ALL_FT_403N = (nextrows.Aka_Total_ALL_FT_403N || 0) - (item.Aka_Total_ALL_FT_403N || 0);
 
                     //===  Total NaOH Used today
                     item.data_used = (Aka_Total_ALL_FT_401N + Aka_Total_ALL_FT_402N + Aka_Total_ALL_FT_403N);
@@ -932,42 +1110,51 @@ export const chartUsedOverview = async (c) => {
 
                 const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
-                // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
-                const prevStart = new Date(baseDate);
-                prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
-                prevStart.setHours(0, 0, 0, 0);
+                // // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
+                // const prevStart = new Date(baseDate);
+                // prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
+                // prevStart.setHours(0, 0, 0, 0);
 
-                // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
-                const prevEnd = new Date(baseDate);
-                prevEnd.setHours(0, 0, 0, 0);
+                // // 2. หาวันสิ้นสุดของเมื่อวาน (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+                // const prevEnd = new Date(baseDate);
+                // prevEnd.setHours(0, 0, 0, 0);
 
-                // แปลงเป็น Seconds (Unix Timestamp)
-                const prevStartSec = Math.floor(prevStart.getTime() / 1000);
-                const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+                // // แปลงเป็น Seconds (Unix Timestamp)
+                // const prevStartSec = Math.floor(prevStart.getTime() / 1000);
+                // const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+                // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+                const nextStart = new Date(baseDate); 
+                nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+                nextStart.setHours(0, 0, 0, 0);
+
+                // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+                const nextEnd = new Date(baseDate);
+                nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+                nextEnd.setHours(0, 0, 0, 0);
+
+                const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+                const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
 
                 // Query ข้อมูลจากตาราง ScadaDataLogAcid วันก่อน
-                const rows = await db('ScadaDataLogAcid')
+                const nextrows = await db('ScadaDataLogAcid')
                     .select("*")
-                    .where('UnixTimestamp', '>=', prevStartSec)
-                    .where('UnixTimestamp', '<=', prevEndSec)
+                    .where('UnixTimestamp', '>=', nextStartSec)
+                    .where('UnixTimestamp', '<=', nextEndSec)
                     .orderBy('UnixTimestamp', 'desc')
                     .first(); // เอาแถวล่าสุดแถวเดียว
 
-                if (rows) {
+                if (nextrows) {
 
-                    // console.log("item >>",item)
-                    // console.log("rows >>",rows)
+                    // const System_Data_Fill = item.Fill_Kg_N || 0;
+                    // const System_Data_Density = item.Density_N || 1;
+                    // const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
+                    // const System_Data_Density_lastday = rows.Density_N || 1;
 
-
-                    const System_Data_Fill = item.Fill_Kg_N || 0;
-                    const System_Data_Density = item.Density_N || 1;
-                    const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
-                    const System_Data_Density_lastday = rows.Density_N || 1;
-
-                    const Aka_Total_ALL_FT_401H = (item.Aka_Total_ALL_FT_401H || 0) - (rows.Aka_Total_ALL_FT_401H || 0);
-                    const Aka_Total_ALL_FT_402H = (item.Aka_Total_ALL_FT_402H || 0) - (rows.Aka_Total_ALL_FT_402H || 0);
-                    const Aka_Total_ALL_FT_403H = (item.Aka_Total_ALL_FT_403H || 0) - (rows.Aka_Total_ALL_FT_403H || 0);
-                    const Aka_Total_ALL_FT_501N = (item.Aka_Total_ALL_FT_501H || 0) - (rows.Aka_Total_ALL_FT_501H || 0);
+                    const Aka_Total_ALL_FT_401H = (nextrows.Aka_Total_ALL_FT_401H || 0) - (item.Aka_Total_ALL_FT_401H || 0);
+                    const Aka_Total_ALL_FT_402H = (nextrows.Aka_Total_ALL_FT_402H || 0) - (item.Aka_Total_ALL_FT_402H || 0);
+                    const Aka_Total_ALL_FT_403H = (nextrows.Aka_Total_ALL_FT_403H || 0) - (item.Aka_Total_ALL_FT_403H || 0);
+                    const Aka_Total_ALL_FT_501N = (nextrows.Aka_Total_ALL_FT_501H || 0) - (item.Aka_Total_ALL_FT_501H || 0);
 
                     // console.log("Aka_Total_ALL_FT_401H ==>>",Aka_Total_ALL_FT_401H);
                     // console.log("Aka_Total_ALL_FT_402H ==>>",Aka_Total_ALL_FT_402H);
@@ -1069,19 +1256,33 @@ export const reprotoverview = async (c) => {
         const densityNaOH = Number(c.req.query('densityNaOH')) || 1;
         const densityHCI = Number(c.req.query('densityHCI')) || 1;
 
-        const data_NaOH_ = await db('ScadaDataLogAlkaline')
-            .select('*')
+        // const data_NaOH_ = await db('ScadaDataLogAlkaline')
+        //     .select('*')
+        //     .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+        //     .where('UnixTimestamp', '<', timestamp.endTimestamp)
+        //     .orderBy('UnixTimestamp', 'asc');
+
+        // // console.log("data_NaOH_ >>:", data_NaOH_);
+
+        // const data_HCI_ = await db('ScadaDataLogAcid')
+        // .select('*')
+        // .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+        // .where('UnixTimestamp', '<', timestamp.endTimestamp)
+        // .orderBy('UnixTimestamp', 'asc');
+
+    // 1. ดึงข้อมูลหลัก (แยกฟังก์ชันออกมาเพื่อให้จัดการง่าย)
+        const [data_NaOH_, data_HCI_] = await Promise.all([
+
+            db('ScadaDataLogAlkaline')
             .where('UnixTimestamp', '>=', timestamp.startTimestamp)
             .where('UnixTimestamp', '<', timestamp.endTimestamp)
-            .orderBy('UnixTimestamp', 'asc');
+            .orderBy('UnixTimestamp', 'asc'),
 
-        // console.log("data_NaOH_ >>:", data_NaOH_);
-
-        const data_HCI_ = await db('ScadaDataLogAcid')
-        .select('*')
-        .where('UnixTimestamp', '>=', timestamp.startTimestamp)
-        .where('UnixTimestamp', '<', timestamp.endTimestamp)
-        .orderBy('UnixTimestamp', 'asc');
+            db('ScadaDataLogAcid')
+            .where('UnixTimestamp', '>=', timestamp.startTimestamp)
+            .where('UnixTimestamp', '<', timestamp.endTimestamp)
+            .orderBy('UnixTimestamp', 'asc')
+        ]);
 
         // 1. สร้าง Array ของ Promises จากการ Map ข้อมูล
         const naoh_promises = await Promise.all(data_NaOH_.map(async (item) => {
@@ -1102,23 +1303,90 @@ export const reprotoverview = async (c) => {
             const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
             // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-            const rows = await db('ScadaDataLogAlkaline')
+            const prevrows = await db('ScadaDataLogAlkaline')
                 .select("*")
                 .where('UnixTimestamp', '>=', prevStartSec)
                 .where('UnixTimestamp', '<=', prevEndSec)
                 .orderBy('UnixTimestamp', 'desc')
                 .first(); // เอาแถวล่าสุดแถวเดียว
 
-            if (rows) {
+            // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+            const nextStart = new Date(baseDate); 
+            nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+            nextStart.setHours(0, 0, 0, 0);
+
+            // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+            const nextEnd = new Date(baseDate);
+            nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+            nextEnd.setHours(0, 0, 0, 0);
+
+            const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+            const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
+
+            const nextrows = await db('ScadaDataLogAlkaline')
+            .select("*")
+            .where('UnixTimestamp', '>=', nextStartSec)
+            .where('UnixTimestamp', '<=', nextEndSec)
+            .orderBy('UnixTimestamp', 'desc')
+            .first(); // เอาแถวล่าสุดแถวเดียว
+
+            // if(nextrows){
+
+            //         // const System_Data_Density = densityNaOH;
+            //         const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
+                    
+            //         //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+            //         item.data_fill = System_Data_Fill_nextday;
+
+            //     }else{
+            //         const System_Data_Fill = 0;
+
+            //         item.data_fill = System_Data_Fill;
+            //     }
+            if(prevrows){
+
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+                // col M
+                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+                // col O
+                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            }else{
+
+                item.data_remaining_tank_Mix_N = 0;
+                item.tank_Mix_between_day_N = 0;
+                item.data_remaining_tank_Store_N = 0;
+                item.tank_Store_between_day_N = 0;
+
+            }
+
+            if (nextrows) {
 
                 // console.log("rows >>:", rows);
 
-                const System_Data_Fill = item.Fill_Kg_N || 0;
-                // const System_Data_Density = item.Density_N || 1;
+                const System_Data_Fill = nextrows.Fill_Kg_N || 0;
+                // const System_Data_Density = nextrows.Density_N || 1;
                 const System_Data_Density = densityNaOH;
-                const System_Data_Fill_lastday = rows.Fill_Kg_N || 0;
+                const System_Data_Fill_lastday = item.Fill_Kg_N || 0;
                 const System_Data_Density_lastday = densityNaOH;
-                // const System_Data_Density_lastday = rows.Density_N || 1;
+                
+                // const System_Data_Density_lastday = prevrows.Density_N || 1;
 
                 // const C1_N = 4;
                 // const C2_N = 50;
@@ -1131,19 +1399,19 @@ export const reprotoverview = async (c) => {
                 // col A
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
-                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+                const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101N || 0;
                 const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
     
-                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+                const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102N || 0;
                 const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
 
-                const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101N || 0;
+                const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101N || 0;
                 const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
     
-                const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102N || 0;
+                const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102N || 0;
                 const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
     
@@ -1169,17 +1437,16 @@ export const reprotoverview = async (c) => {
                 // col G
                 item.data_Fill_N =  System_Data_Fill;
 
-                
                 // col H
-                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101N || 0);
                 item.Total_ALL_FT_101_N = Total_ALL_FT_101;
 
                 // col I
-                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+                const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201N || 0);
                 item.Total_ALL_FT_201_N = Total_ALL_FT_201;
 
-                const Total_ALL_FT_101_lastday = (rows.Aka_Total_ALL_FT_101N || 0);
-                const Total_ALL_FT_201_lastday = (rows.Aka_Total_ALL_FT_201N || 0);
+                const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201N || 0);
 
                 // col J
                 item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
@@ -1187,62 +1454,68 @@ export const reprotoverview = async (c) => {
                 // col K
                 item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
-                // col L
-                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
-                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
-
-                // col M
-                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301N || 0;
-                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
-
-                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
-
-                // col N
-                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
-                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
-
-                // col O
-                const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401N || 0);
-                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
-
-                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
-
                 // col Q (PD1)
-                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
+                const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401N || 0);
                 
                 item.Total_ALL_FT_401_N = Total_ALL_FT_401;
                 
                 // col Q (PD2)
-                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+                const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402N || 0);
 
                 item.Total_ALL_FT_402_N = Total_ALL_FT_402;
 
                 // col Q (PD3)
-                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+                const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403N || 0);
 
                 item.Total_ALL_FT_403_N = Total_ALL_FT_403;
 
                 // col R (PD1)
-                const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401N || 0);
+                const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401N || 0);
                 const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
                 item.pd1_between_day_N = pd1_between_day;
                 
                 // col R (PD2)
-                const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402N || 0);
+                const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402N || 0);
                 const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
                 item.pd2_between_day_N = pd2_between_day;
 
                 // col R (PD3)
-                const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403N || 0);
+                const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403N || 0);
                 const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
                 item.pd3_between_day_N = pd3_between_day;
 
                 // col S
                 item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
 
-                // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
+                
+
+            }else{
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+                item.density_N = 0;
+                item.data_remaining_fill_N = 0;
+                item.data_remaining_fill_total_N = 0;
+                item.Fill_between_day_N = 0;
+                item.data_Fill_N = 0;
+                item.Total_ALL_FT_101_N = 0;
+                item.Total_ALL_FT_201_N = 0;
+                item.chemical_between_day_N = 0;
+                item.ro_between_day_N = 0;
+                item.Total_ALL_FT_401_N = 0;
+                item.Total_ALL_FT_402_N = 0;
+                item.Total_ALL_FT_403_N = 0;
+                item.pd1_between_day_N = 0;
+                item.pd2_between_day_N = 0;
+                item.pd3_between_day_N = 0;
+                item.totalAll_use_between_day_N = 0;
+
+            }
+
+            if(nextrows && prevrows){
+
+                // ส่งค่ากลับไปในแต่ละ nextrows เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
                     ...item,
                 };
@@ -1269,43 +1542,102 @@ export const reprotoverview = async (c) => {
             const prevEndSec = Math.floor(prevEnd.getTime() / 1000);
 
             // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
-            const rows = await db('ScadaDataLogAcid')
+            const prevrows = await db('ScadaDataLogAcid')
                 .select("*")
                 .where('UnixTimestamp', '>=', prevStartSec)
                 .where('UnixTimestamp', '<=', prevEndSec)
                 .orderBy('UnixTimestamp', 'desc')
                 .first(); // เอาแถวล่าสุดแถวเดียว
 
-            if (rows) {
+            // 1. หาวันถัดไป (เดินหน้าไป 1 วัน) เริ่มต้นที่ 00:00:00
+            const nextStart = new Date(baseDate); 
+            nextStart.setDate(baseDate.getDate() + 1); // เปลี่ยนจาก -1 เป็น +1
+            nextStart.setHours(0, 0, 0, 0);
 
-                // console.log("rows >>:", rows);
+            // 2. หาวันสิ้นสุดของวันถัดไป (ก็คือจุดเริ่มต้นของวันถัดไปอีกวันหนึ่ง ที่ 00:00:00)
+            const nextEnd = new Date(baseDate);
+            nextEnd.setDate(baseDate.getDate() + 2); // เปลี่ยนเป็น +2 เพื่อให้ได้จุดเริ่มต้นของวันถัดไปจาก nextStart
+            nextEnd.setHours(0, 0, 0, 0);
 
-                const System_Data_Fill = item.Fill_Kg_H || 0;
-                // const System_Data_Density = item.Density_H || 1;
-                const System_Data_Density = densityHCI;
-                const System_Data_Fill_lastday = rows.Fill_Kg_H || 0;
-                // const System_Data_Density_lastday = rows.Density_H || 1;
-                const System_Data_Density_lastday = densityHCI;
+            const nextStartSec = Math.floor(nextStart.getTime() / 1000);
+            const nextEndSec = Math.floor(nextEnd.getTime() / 1000);
 
+            const nextrows = await db('ScadaDataLogAcid')
+                .select("*")
+                .where('UnixTimestamp', '>=', nextStartSec)
+                .where('UnixTimestamp', '<=', nextEndSec)
+                .orderBy('UnixTimestamp', 'desc')
+                .first(); // เอาแถวล่าสุดแถวเดียว
+
+            if(prevrows){
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 // col A
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
-                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+                // nextrows.LT_PV_m3_LT_301_H = LT_PV_m3_LT_301;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+                item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
+
+                // col M
+                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301H || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+                item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                // item.LT_PV_m3_LT_401_H = LT_PV_m3_LT_401;
+                item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                
+                // col O
+                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401H || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            }else{
+
+                item.data_remaining_tank_Mix_H = 0;
+                item.tank_Mix_between_day_H = 0;
+                item.data_remaining_tank_Store_H = 0;
+                item.tank_Store_between_day_H = 0;
+
+            }
+
+            if (nextrows) {
+
+                // console.log("nextrows >>:", nextrows);
+
+                const System_Data_Fill = nextrows.Fill_Kg_H || 0;
+                // const System_Data_Density = nextrows.Density_H || 1;
+                const System_Data_Density = densityHCI;
+                const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
+                // const System_Data_Density_lastday = rows.Density_H || 1;
+                const System_Data_Density_lastday = densityHCI;
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                // col A
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+                const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101H || 0;
                 const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
     
-                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+                const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102H || 0;
                 const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
 
-                const LT_PV_m3_LT_101_lastday = rows.LT_PV_m3_LT_101H || 0;
+                const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101H || 0;
                 const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
     
-                const LT_PV_m3_LT_102_lastday = rows.LT_PV_m3_LT_102H || 0;
+                const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102H || 0;
                 const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
     
@@ -1332,15 +1664,15 @@ export const reprotoverview = async (c) => {
                 item.data_Fill_H =  System_Data_Fill;
                 
                 // col H
-                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+                const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101H || 0);
                 item.Total_ALL_FT_101_H = Total_ALL_FT_101;
 
                 // col I
-                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+                const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201H || 0);
                 item.Total_ALL_FT_201_H = Total_ALL_FT_201;
 
-                const Total_ALL_FT_101_lastday = (rows.Aka_Total_ALL_FT_101H || 0);
-                const Total_ALL_FT_201_lastday = (rows.Aka_Total_ALL_FT_201H || 0);
+                const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101H || 0);
+                const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201H || 0);
 
                 // col J
                 item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
@@ -1348,69 +1680,45 @@ export const reprotoverview = async (c) => {
                 // col K
                 item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
-                // col L
-                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
-                // item.LT_PV_m3_LT_301_H = LT_PV_m3_LT_301;
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
-                item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
-
-                // col M
-                const LT_PV_m3_LT_301_lastday = rows.LT_PV_m3_LT_301H || 0;
-                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
-
-                item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
-
-                // col N
-                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
-                // item.LT_PV_m3_LT_401_H = LT_PV_m3_LT_401;
-                item.data_remaining_tank_Store_H = data_remaining_tank_Store;
-                
-                // col O
-                const LT_PV_m3_LT_401_lastday = (rows.LT_PV_m3_LT_401H || 0);
-                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
-
-                item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
-
                 // col Q (PD1)
-                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+                const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401H || 0);
                 
                 item.Total_ALL_FT_401_H = Total_ALL_FT_401;
                 
                 // col Q (PD2)
-                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+                const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402H || 0);
 
                 item.Total_ALL_FT_402_H = Total_ALL_FT_402;
 
                 // col Q (PD3)
-                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+                const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403H || 0);
 
                 item.Total_ALL_FT_403_H = Total_ALL_FT_403;
 
                 // col Q (PD3)
-                const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
+                const Total_ALL_FT_501 = (nextrows.Aka_Total_ALL_FT_501H || 0);
 
                 item.Total_ALL_FT_501_H = Total_ALL_FT_501;
 
                 // col R (PD1)
-                const Total_ALL_FT_401_lastday = (rows.Aka_Total_ALL_FT_401H || 0);
+                const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401H || 0);
                 const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
 
                 item.pd1_between_day_H = pd1_between_day;
                 
                 // col R (PD2)
-                const Total_ALL_FT_402_lastday = (rows.Aka_Total_ALL_FT_402H || 0);
+                const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402H || 0);
                 const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
 
                 item.pd2_between_day_H = pd2_between_day;
 
                 // col R (PD3)
-                const Total_ALL_FT_403_lastday = (rows.Aka_Total_ALL_FT_403H || 0);
+                const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403H || 0);
                 const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
                 item.pd3_between_day_H = pd3_between_day;
 
                 // col R (ES)
-                const Total_ALL_FT_501_lastday = (rows.Aka_Total_ALL_FT_501H || 0);
+                const Total_ALL_FT_501_lastday = (item.Aka_Total_ALL_FT_501H || 0);
                 const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
                 item.es_between_day_H = es_between_day;
 
@@ -1419,8 +1727,32 @@ export const reprotoverview = async (c) => {
 
                 item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
 
+            }else{
 
-                // ส่งค่ากลับไปในแต่ละ item เพื่อนำไปบวกเพิ่มภายหลัง
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+                item.density_H = 0;
+                item.data_remaining_fill_H = 0;
+                item.data_remaining_fill_total_H = 0;
+                item.Fill_between_day_H = 0;
+                item.data_Fill_H = 0;
+                item.Total_ALL_FT_101_H = 0;
+                item.Total_ALL_FT_201_H = 0;
+                item.chemical_between_day_H = 0;
+                item.ro_between_day_H = 0;
+                item.Total_ALL_FT_401_H = 0;
+                item.Total_ALL_FT_402_H = 0;
+                item.Total_ALL_FT_403_H = 0;
+                item.pd1_between_day_H = 0;
+                item.pd2_between_day_H = 0;
+                item.pd3_between_day_H = 0;
+                item.totalAll_use_between_day_H = 0;
+            }
+
+            if(nextrows && prevrows){
+
+                // ส่งค่ากลับไปในแต่ละ nextrows เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
                     ...item,
                 };

@@ -8,204 +8,87 @@ import {fetchDataUsedchart} from '@/services/fetch';
 import {fetchDataTransferchart} from '@/services/fetch';
 import { cache } from 'react';
 
-export const getFillOverviewData = cache(async (timeFrame: string, department: string) => {
-  // Fake delay
-  // await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // const data = await fetch(`http://localhost:3000/api/chartfilloverview?period=today`)
-  // .then(res => res.json());
-
-  // console.log("timeFrame?service >>> ",timeFrame)
-
+export const getOverviewData = cache(async (timeFrame: string, department: string) => {
   let response = [];
 
-  if(department == "fill"){
-
+  if (department === "fill") {
     response = await fetchDataFillchart(timeFrame);
-    // console.log("fetchDataFillchart?service >>> ",response?.data)
-    
-  }else if(department == "store"){
-
+  } else if (department === "store") {
     response = await fetchDataStorechart(timeFrame);
-    // console.log("fetchDataStorechart?service >>> ",response.data)
-
-  }else if(department == "used"){
+  } else if (department === "used") {
     response = await fetchDataUsedchart(timeFrame);
-    // console.log("fetchDataUsedchart?service >>> ",response?.data)
   }
 
   const rawData = response?.data;
-
-    // console.log("rawData?service >>> ",rawData)
 
   if (!rawData) {
     return { received: [], due: [] };
   }
 
-  // 1. ฟังก์ชันช่วยสร้าง Label และจัดการ Object เบื้องต้น
-    const processRaw = (source: any, namedata:string) => {
-        if (!source) return {};
-        const mapped: Record<string, number> = {};
-        
-        Object.values(source).forEach((item: any) => {
-        
-          let xLabel = item.date;
-          const isFullDate = item.date && item.date.includes("-");
-
-          if (isFullDate) {
-
-            const d = new Date(item.date);
-            if (!isNaN(d.getTime())) {
-                if (timeFrame === "monthly") {
-                    xLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-                } else if (timeFrame === "yearly") {
-                    xLabel = d.toLocaleString('en-US', { month: 'short' });
-                }
-            }
-          }
-          // เก็บข้อมูลในรูปแบบ { "10:32": 100, "10:35": 200 }
-          // mapped[xLabel] = Number(item.total_T1_Kg || 0) + (Number(item.total_T2_Kg || 0  ))
-          // console.log("item[namedata] >>:", item[namedata])
-
-          // mapped[xLabel] = Number(item[namedata] || 0);
-          // mapped[xLabel] = Number(item["total_fill"] || 0);
-
-          if(namedata == "NaOH_Fill" || namedata == "HCI_Fill"){
-
-            mapped[xLabel] = Number(item["total_fill"] || 0);
-
-          }else if(namedata == "NaOH_Store" || namedata == "HCI_Store"){
-
-            mapped[xLabel] = Number(item["total_store"] || 0);
-
-          }else if(namedata == "NaOH_Used" || namedata == "HCI_Used"){
-
-            mapped[xLabel] = Number(item["total_used"] || 0);
-
-          }else {
-
-            mapped[xLabel] = 0;
-            
-          }
-
-
-        });
-        return mapped;
-    };
-
-    const naohMapped = department === "fill" ? 
-                        processRaw(rawData.NaOH_Fill,"NaOH_Fill") : department === "store" ? 
-                        processRaw(rawData.NaOH_Store,"NaOH_Store") : processRaw(rawData.NaOH_Used,"NaOH_Used");
-
-    const hciMapped = department === "fill" ? 
-                        processRaw(rawData.HCI_Fill, "HCI_Fill") : department === "store" ? 
-                        processRaw(rawData.HCI_Store, "HCI_Store") : processRaw(rawData.HCI_Used, "HCI_Used");
-
-    // 2. สร้าง Set ของแกน X ทั้งหมด (รวมชื่อวันที่/เวลาจากทั้งสองฝั่งไม่ให้ซ้ำกัน)
-    const allLabels = Array.from(new Set([
-        ...Object.keys(naohMapped),
-        ...Object.keys(hciMapped)
-    ])).sort(); // sort เพื่อให้เวลาเรียงลำดับ
-
-    // 3. สร้าง Result โดยเช็คว่าถ้าไม่มีข้อมูลใน Label นั้นๆ ให้เป็น 0
-    const received = allLabels.map(label => ({
-        x: label,
-        y: naohMapped[label] || 0 // ถ้าไม่มีค่าใน Naoh ให้เป็น 0
-    }));
-
-    const due = allLabels.map(label => ({
-        x: label,
-        y: hciMapped[label] || 0 // ถ้าไม่มีค่าใน Hci ให้เป็น 0
-    }));
-
-    // console.log(sales);
-    // console.log(revenue);
-
-
-    return { received, due };
-
-
-  // if (timeFrame === "monthly") {
-  //   return {
-  //     received: [
-  //     { x: "01/04", y: 0 },
-  //     { x: "02/04", y: 2000 },
-  //     { x: "03/04", y: 3500 },
-  //     { x: "04/04", y: 4500 },
-  //     { x: "05/04", y: 3500 },
-  //     { x: "06/04", y: 5500 },
-  //     { x: "07/04", y: 6500 },
-  //     { x: "08/04", y: 5000 },
-  //     { x: "09/04", y: 6500 },
-  //     { x: "10/04", y: 7500 },
-  //     { x: "11/04", y: 6000 },
-  //     { x: "12/04", y: 7500 },
-  //   ],
-  //   due: [
-  //     { x: "01/04", y: 1500 },
-  //     { x: "02/04", y: 900 },
-  //     { x: "03/04", y: 1700 },
-  //     { x: "04/04", y: 3200 },
-  //     { x: "05/04", y: 2500 },
-  //     { x: "06/04", y: 6800 },
-  //     { x: "07/04", y: 8000 },
-  //     { x: "09/04", y: 6800 },
-  //     { x: "10/04", y: 8400 },
-  //     { x: "11/04", y: 9400 },
-  //     { x: "12/04", y: 7400 },
-  //     { x: "11/04", y: 6000 },
-  //   ],
-  //   };
-
-  // }else if(timeFrame === "yearly"){
-  //   return {
-  //       received: [
-  //       { x: "Jan", y: 0 },
-  //       { x: "Feb", y: 2000 },
-  //       { x: "Mar", y: 3500 },
-  //       { x: "Apr", y: 4500 },
-  //       { x: "May", y: 3500 },
-  //       { x: "Jun", y: 5500 },
-  //       { x: "Jul", y: 6500 },
-  //       { x: "Aug", y: 5000 },
-  //       { x: "Sep", y: 6500 },
-  //       { x: "Oct", y: 7500 },
-  //       { x: "Nov", y: 6000 },
-  //       { x: "Dec", y: 7500 },
-  //     ],
-  //     due: [
-  //       { x: "Jan", y: 1500 },
-  //       { x: "Feb", y: 900 },
-  //       { x: "Mar", y: 1700 },
-  //       { x: "Apr", y: 3200 },
-  //       { x: "May", y: 2500 },
-  //       { x: "Jun", y: 6800 },
-  //       { x: "Jul", y: 8000 },
-  //       { x: "Aug", y: 6800 },
-  //       { x: "Sep", y: 8400 },
-  //       { x: "Oct", y: 9400 },
-  //       { x: "Nov", y: 7400 },
-  //       { x: "Dec", y: 6200 },
-  //     ],
-  //   }
-  // }else{
-  //   return {
-  //     received: [
-  //       { x: "10:30", y: 0 },
-  //       { x: "13:00", y: 2000 },
-  //       { x: "16:00", y: 3500 },
-  
-  //     ],
-  //     due: [
-  //       { x: "10:30", y: 1500 },
-  //       { x: "13:00", y: 900 },
-  //       { x: "16:00", y: 1700 },
-  
-  //     ],
-  //   };
+  // 1. ฟังก์ชันช่วยสร้าง Label และจัดการ Object แบบปลอดภัยสูง
+  const processRaw = (source: any, namedata: string) => {
+    if (!source) return {};
+    const mapped: Record<string, number> = {};
     
-  // }
+    Object.values(source).forEach((item: any) => {
+      if (!item) return;
 
+      let xLabel = item.date;
+      const isFullDate = item.date && String(item.date).includes("-");
+
+      if (isFullDate) {
+        const d = new Date(item.date);
+        if (!isNaN(d.getTime())) {
+          if (timeFrame === "monthly") {
+            xLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+          } else if (timeFrame === "yearly") {
+            xLabel = d.toLocaleString('en-US', { month: 'short' });
+          } else {
+            // แก้ไข: สำหรับ daily / today หรืออื่นๆ ให้แปลงเป็นเวลา HH:mm เสมอ เพื่อให้ ApexCharts อ่านได้ราบรื่น
+            xLabel = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+          }
+        }
+      }
+
+      // ดักจับค่าตัวเลข: ตรวจสอบทั้งคีย์รวม (total_*) และคีย์ตรงชื่อ (namedata) ป้องกันคีย์หาย
+      const value = item.total_fill ?? item.total_store ?? item.total_used ?? item[namedata] ?? 0;
+      mapped[xLabel] = Number(value) || 0;
+    });
+    return mapped;
+  };
+
+  // ดึงข้อมูล NaOH แยกตามแผนก
+  const naohMapped = department === "fill" 
+    ? processRaw(rawData.NaOH_Fill, "NaOH_Fill") 
+    : department === "store" 
+      ? processRaw(rawData.NaOH_Store, "NaOH_Store") 
+      : processRaw(rawData.NaOH_Used, "NaOH_Used");
+
+  // ดึงข้อมูล HCI: เพิ่ม Fallback หากแผนก store หรือ used ไม่มีคีย์ HCI ให้กลับไปใช้คีย์ NaOH แทนตามโค้ดเดิมของคุณ
+  const hciMapped = department === "fill" 
+    ? processRaw(rawData.HCI_Fill, "HCI_Fill") 
+    : department === "store" 
+      ? processRaw(rawData.HCI_Store || rawData.NaOH_Store, "HCI_Store") 
+      : processRaw(rawData.HCI_Used || rawData.NaOH_Used, "HCI_Used");
+
+  // 2. สร้าง Set ของแกน X ทั้งหมด
+  const allLabels = Array.from(new Set([
+    ...Object.keys(naohMapped),
+    ...Object.keys(hciMapped)
+  ])).sort();
+
+  // 3. สร้าง Result
+  const received = allLabels.map(label => ({
+    x: label,
+    y: naohMapped[label] || 0
+  }));
+
+  const due = allLabels.map(label => ({
+    x: label,
+    y: hciMapped[label] || 0
+  }));
+
+  return { received, due };
 });
 
 export const getStoreOverviewData = cache(async (timeFrame: string, department: string) => {
