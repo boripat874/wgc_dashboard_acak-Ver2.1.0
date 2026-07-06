@@ -1330,55 +1330,21 @@ export const reprotoverview = async (c) => {
             .orderBy('UnixTimestamp', 'desc')
             .first(); // เอาแถวล่าสุดแถวเดียว
 
-            // if(nextrows){
+            if(nextrows){
 
-            //         // const System_Data_Density = densityNaOH;
-            //         const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
+                    // const System_Data_Density = densityNaOH;
+                    const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
                     
-            //         //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
-            //         item.data_fill = System_Data_Fill_nextday;
+                    //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+                    item.data_fill = System_Data_Fill_nextday;
 
-            //     }else{
-            //         const System_Data_Fill = 0;
+                }else{
+                    const System_Data_Fill = 0;
 
-            //         item.data_fill = System_Data_Fill;
-            //     }
-            if(prevrows){
+                    item.data_fill = System_Data_Fill;
+                }
 
-                // col L
-                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
-                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
-                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
-
-                // col M
-                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
-                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
-
-                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
-
-                // col N
-                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
-                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
-                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
-
-                // col O
-                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
-                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
-
-                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
-
-            }else{
-
-                item.data_remaining_tank_Mix_N = 0;
-                item.tank_Mix_between_day_N = 0;
-                item.data_remaining_tank_Store_N = 0;
-                item.tank_Store_between_day_N = 0;
-
-            }
-
-            if (nextrows) {
-
-                // console.log("rows >>:", rows);
+            if(prevrows && nextrows){
 
                 const System_Data_Fill = nextrows.Fill_Kg_N || 0;
                 // const System_Data_Density = nextrows.Density_N || 1;
@@ -1399,19 +1365,19 @@ export const reprotoverview = async (c) => {
                 // col A
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
-                const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101N || 0;
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
                 const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
     
-                const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102N || 0;
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
                 const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
 
-                const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101N || 0;
+                const LT_PV_m3_LT_101_lastday = prevrows.LT_PV_m3_LT_101N || 0;
                 const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
                 // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
     
-                const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102N || 0;
+                const LT_PV_m3_LT_102_lastday = prevrows.LT_PV_m3_LT_102N || 0;
                 const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
                 // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
     
@@ -1438,15 +1404,15 @@ export const reprotoverview = async (c) => {
                 item.data_Fill_N =  System_Data_Fill;
 
                 // col H
-                const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
                 item.Total_ALL_FT_101_N = Total_ALL_FT_101;
 
                 // col I
-                const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201N || 0);
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
                 item.Total_ALL_FT_201_N = Total_ALL_FT_201;
 
-                const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101N || 0);
-                const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201N || 0);
+                const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201N || 0);
 
                 // col J
                 item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
@@ -1454,42 +1420,67 @@ export const reprotoverview = async (c) => {
                 // col K
                 item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+                // col M
+                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+                // col O
+                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
                 // col Q (PD1)
-                const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401N || 0);
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
                 
                 item.Total_ALL_FT_401_N = Total_ALL_FT_401;
                 
                 // col Q (PD2)
-                const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402N || 0);
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
 
                 item.Total_ALL_FT_402_N = Total_ALL_FT_402;
 
                 // col Q (PD3)
-                const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403N || 0);
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
 
                 item.Total_ALL_FT_403_N = Total_ALL_FT_403;
 
                 // col R (PD1)
-                const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401N || 0);
+                const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401N || 0);
                 const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
                 item.pd1_between_day_N = pd1_between_day;
                 
                 // col R (PD2)
-                const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402N || 0);
+                const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402N || 0);
                 const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
                 item.pd2_between_day_N = pd2_between_day;
 
                 // col R (PD3)
-                const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403N || 0);
+                const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403N || 0);
                 const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
                 item.pd3_between_day_N = pd3_between_day;
 
                 // col S
                 item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
 
-                
-
             }else{
+
+                item.data_remaining_tank_Mix_N = 0;
+                item.tank_Mix_between_day_N = 0;
+                item.data_remaining_tank_Store_N = 0;
+                item.tank_Store_between_day_N = 0;
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1513,7 +1504,144 @@ export const reprotoverview = async (c) => {
 
             }
 
-            if(nextrows && prevrows){
+            // if (nextrows) {
+
+            //     // console.log("rows >>:", rows);
+
+            //     const System_Data_Fill = nextrows.Fill_Kg_N || 0;
+            //     // const System_Data_Density = nextrows.Density_N || 1;
+            //     const System_Data_Density = densityNaOH;
+            //     const System_Data_Fill_lastday = item.Fill_Kg_N || 0;
+            //     const System_Data_Density_lastday = densityNaOH;
+                
+            //     // const System_Data_Density_lastday = prevrows.Density_N || 1;
+
+            //     // const C1_N = 4;
+            //     // const C2_N = 50;
+
+            //     // const C1_H = 6;
+            //     // const C2_H = 35;
+
+            //     const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //     // col A
+            //     item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //     const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101N || 0;
+            //     const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //     // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+            //     const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102N || 0;
+            //     const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //     // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //     const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101N || 0;
+            //     const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+            //     // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+            //     const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102N || 0;
+            //     const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+            //     // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+    
+            //     // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //     // col C
+            //     item.density_N = System_Data_Density;
+                
+            //     // col D
+            //     const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //     item.data_remaining_fill_N = data_remaining_fill;
+
+            //     // col E
+            //     const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //     item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+            //     const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+            //     const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+            //     // col F
+            //     const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+            //     item.Fill_between_day_N = Fill_between_day;
+
+            //     // col G
+            //     item.data_Fill_N =  System_Data_Fill;
+
+            //     // col H
+            //     const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101N || 0);
+            //     item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+            //     // col I
+            //     const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201N || 0);
+            //     item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+            //     const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101N || 0);
+            //     const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201N || 0);
+
+            //     // col J
+            //     item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //     // col K
+            //     item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //     // col Q (PD1)
+            //     const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401N || 0);
+                
+            //     item.Total_ALL_FT_401_N = Total_ALL_FT_401;
+                
+            //     // col Q (PD2)
+            //     const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402N || 0);
+
+            //     item.Total_ALL_FT_402_N = Total_ALL_FT_402;
+
+            //     // col Q (PD3)
+            //     const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403N || 0);
+
+            //     item.Total_ALL_FT_403_N = Total_ALL_FT_403;
+
+            //     // col R (PD1)
+            //     const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401N || 0);
+            //     const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
+            //     item.pd1_between_day_N = pd1_between_day;
+                
+            //     // col R (PD2)
+            //     const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402N || 0);
+            //     const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+            //     item.pd2_between_day_N = pd2_between_day;
+
+            //     // col R (PD3)
+            //     const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403N || 0);
+            //     const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //     item.pd3_between_day_N = pd3_between_day;
+
+            //     // col S
+            //     item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+                
+
+            // }else{
+
+            //     const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //     item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+            //     item.density_N = 0;
+            //     item.data_remaining_fill_N = 0;
+            //     item.data_remaining_fill_total_N = 0;
+            //     item.Fill_between_day_N = 0;
+            //     item.data_Fill_N = 0;
+            //     item.Total_ALL_FT_101_N = 0;
+            //     item.Total_ALL_FT_201_N = 0;
+            //     item.chemical_between_day_N = 0;
+            //     item.ro_between_day_N = 0;
+            //     item.Total_ALL_FT_401_N = 0;
+            //     item.Total_ALL_FT_402_N = 0;
+            //     item.Total_ALL_FT_403_N = 0;
+            //     item.pd1_between_day_N = 0;
+            //     item.pd2_between_day_N = 0;
+            //     item.pd3_between_day_N = 0;
+            //     item.totalAll_use_between_day_N = 0;
+
+            // }
+
+            if(prevrows){
 
                 // ส่งค่ากลับไปในแต่ละ nextrows เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
@@ -1569,9 +1697,74 @@ export const reprotoverview = async (c) => {
                 .orderBy('UnixTimestamp', 'desc')
                 .first(); // เอาแถวล่าสุดแถวเดียว
 
-            if(prevrows){
+            if(prevrows && nextrows){
+
+                const System_Data_Fill = nextrows.Fill_Kg_H || 0;
+                // const System_Data_Density = nextrows.Density_H || 1;
+                const System_Data_Density = densityHCI;
+                const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
+                // const System_Data_Density_lastday = rows.Density_H || 1;
+                const System_Data_Density_lastday = densityHCI;
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                // col A
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+                const LT_PV_m3_LT_101_lastday = prevrows.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+                const LT_PV_m3_LT_102_lastday = prevrows.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+                // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+    
+                // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+                // col C
+                item.density_H = System_Data_Density;
+
+                // col D
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+                item.data_remaining_fill_H = data_remaining_fill;
+
+                // col E
+                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+                item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+                // col F
+                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+                item.Fill_between_day_H = Fill_between_day;
+
+                // col G
+                item.data_Fill_H =  System_Data_Fill;
+                
+                // col H
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+                item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+                // col I
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+                item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+                const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101H || 0);
+                const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201H || 0);
+
+                // col J
+                item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+                // col K
+                item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
                 // col A
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
@@ -1600,125 +1793,45 @@ export const reprotoverview = async (c) => {
 
                 item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
-            }else{
-
-                item.data_remaining_tank_Mix_H = 0;
-                item.tank_Mix_between_day_H = 0;
-                item.data_remaining_tank_Store_H = 0;
-                item.tank_Store_between_day_H = 0;
-
-            }
-
-            if (nextrows) {
-
-                // console.log("nextrows >>:", nextrows);
-
-                const System_Data_Fill = nextrows.Fill_Kg_H || 0;
-                // const System_Data_Density = nextrows.Density_H || 1;
-                const System_Data_Density = densityHCI;
-                const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
-                // const System_Data_Density_lastday = rows.Density_H || 1;
-                const System_Data_Density_lastday = densityHCI;
-
-                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
-
-                // col A
-                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
-
-                const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101H || 0;
-                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
-                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
-    
-                const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102H || 0;
-                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
-                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
-
-                const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101H || 0;
-                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
-                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
-    
-                const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102H || 0;
-                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
-                // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
-    
-                // console.log("data_remaining_tank1_fill_total >>", data_remaining     
-                // col C
-                item.density_H = System_Data_Density;
-
-                // col D
-                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
-                item.data_remaining_fill_H = data_remaining_fill;
-
-                // col E
-                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
-                item.data_remaining_fill_total_H = data_remaining_fill_total;
-
-                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
-                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
-
-                // col F
-                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
-                item.Fill_between_day_H = Fill_between_day;
-
-                // col G
-                item.data_Fill_H =  System_Data_Fill;
-                
-                // col H
-                const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101H || 0);
-                item.Total_ALL_FT_101_H = Total_ALL_FT_101;
-
-                // col I
-                const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201H || 0);
-                item.Total_ALL_FT_201_H = Total_ALL_FT_201;
-
-                const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101H || 0);
-                const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201H || 0);
-
-                // col J
-                item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
-
-                // col K
-                item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
-
                 // col Q (PD1)
-                const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401H || 0);
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
                 
                 item.Total_ALL_FT_401_H = Total_ALL_FT_401;
                 
                 // col Q (PD2)
-                const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402H || 0);
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
 
                 item.Total_ALL_FT_402_H = Total_ALL_FT_402;
 
                 // col Q (PD3)
-                const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403H || 0);
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
 
                 item.Total_ALL_FT_403_H = Total_ALL_FT_403;
 
                 // col Q (PD3)
-                const Total_ALL_FT_501 = (nextrows.Aka_Total_ALL_FT_501H || 0);
+                const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
 
                 item.Total_ALL_FT_501_H = Total_ALL_FT_501;
 
                 // col R (PD1)
-                const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401H || 0);
+                const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401H || 0);
                 const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
 
                 item.pd1_between_day_H = pd1_between_day;
                 
                 // col R (PD2)
-                const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402H || 0);
+                const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402H || 0);
                 const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
 
                 item.pd2_between_day_H = pd2_between_day;
 
                 // col R (PD3)
-                const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403H || 0);
+                const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403H || 0);
                 const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
                 item.pd3_between_day_H = pd3_between_day;
 
                 // col R (ES)
-                const Total_ALL_FT_501_lastday = (item.Aka_Total_ALL_FT_501H || 0);
+                const Total_ALL_FT_501_lastday = (prevrows.Aka_Total_ALL_FT_501H || 0);
                 const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
                 item.es_between_day_H = es_between_day;
 
@@ -1728,6 +1841,11 @@ export const reprotoverview = async (c) => {
                 item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
 
             }else{
+
+                item.data_remaining_tank_Mix_H = 0;
+                item.tank_Mix_between_day_H = 0;
+                item.data_remaining_tank_Store_H = 0;
+                item.tank_Store_between_day_H = 0;
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1747,10 +1865,151 @@ export const reprotoverview = async (c) => {
                 item.pd1_between_day_H = 0;
                 item.pd2_between_day_H = 0;
                 item.pd3_between_day_H = 0;
-                item.totalAll_use_between_day_H = 0;
+
             }
 
-            if(nextrows && prevrows){
+            // if (nextrows) {
+
+            //     // console.log("nextrows >>:", nextrows);
+
+            //     const System_Data_Fill = nextrows.Fill_Kg_H || 0;
+            //     // const System_Data_Density = nextrows.Density_H || 1;
+            //     const System_Data_Density = densityHCI;
+            //     const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
+            //     // const System_Data_Density_lastday = rows.Density_H || 1;
+            //     const System_Data_Density_lastday = densityHCI;
+
+            //     const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //     // col A
+            //     item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //     const LT_PV_m3_LT_101 = nextrows.LT_PV_m3_LT_101H || 0;
+            //     const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //     // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+            //     const LT_PV_m3_LT_102 = nextrows.LT_PV_m3_LT_102H || 0;
+            //     const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //     // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //     const LT_PV_m3_LT_101_lastday = item.LT_PV_m3_LT_101H || 0;
+            //     const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+            //     // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+            //     const LT_PV_m3_LT_102_lastday = item.LT_PV_m3_LT_102H || 0;
+            //     const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+            //     // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+    
+            //     // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //     // col C
+            //     item.density_H = System_Data_Density;
+
+            //     // col D
+            //     const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //     item.data_remaining_fill_H = data_remaining_fill;
+
+            //     // col E
+            //     const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //     item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+            //     const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+            //     const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+            //     // col F
+            //     const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+            //     item.Fill_between_day_H = Fill_between_day;
+
+            //     // col G
+            //     item.data_Fill_H =  System_Data_Fill;
+                
+            //     // col H
+            //     const Total_ALL_FT_101 = (nextrows.Aka_Total_ALL_FT_101H || 0);
+            //     item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+            //     // col I
+            //     const Total_ALL_FT_201 = (nextrows.Aka_Total_ALL_FT_201H || 0);
+            //     item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+            //     const Total_ALL_FT_101_lastday = (item.Aka_Total_ALL_FT_101H || 0);
+            //     const Total_ALL_FT_201_lastday = (item.Aka_Total_ALL_FT_201H || 0);
+
+            //     // col J
+            //     item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //     // col K
+            //     item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //     // col Q (PD1)
+            //     const Total_ALL_FT_401 = (nextrows.Aka_Total_ALL_FT_401H || 0);
+                
+            //     item.Total_ALL_FT_401_H = Total_ALL_FT_401;
+                
+            //     // col Q (PD2)
+            //     const Total_ALL_FT_402 = (nextrows.Aka_Total_ALL_FT_402H || 0);
+
+            //     item.Total_ALL_FT_402_H = Total_ALL_FT_402;
+
+            //     // col Q (PD3)
+            //     const Total_ALL_FT_403 = (nextrows.Aka_Total_ALL_FT_403H || 0);
+
+            //     item.Total_ALL_FT_403_H = Total_ALL_FT_403;
+
+            //     // col Q (PD3)
+            //     const Total_ALL_FT_501 = (nextrows.Aka_Total_ALL_FT_501H || 0);
+
+            //     item.Total_ALL_FT_501_H = Total_ALL_FT_501;
+
+            //     // col R (PD1)
+            //     const Total_ALL_FT_401_lastday = (item.Aka_Total_ALL_FT_401H || 0);
+            //     const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
+
+            //     item.pd1_between_day_H = pd1_between_day;
+                
+            //     // col R (PD2)
+            //     const Total_ALL_FT_402_lastday = (item.Aka_Total_ALL_FT_402H || 0);
+            //     const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+
+            //     item.pd2_between_day_H = pd2_between_day;
+
+            //     // col R (PD3)
+            //     const Total_ALL_FT_403_lastday = (item.Aka_Total_ALL_FT_403H || 0);
+            //     const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //     item.pd3_between_day_H = pd3_between_day;
+
+            //     // col R (ES)
+            //     const Total_ALL_FT_501_lastday = (item.Aka_Total_ALL_FT_501H || 0);
+            //     const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
+            //     item.es_between_day_H = es_between_day;
+
+            //     // col S
+            //     item.total_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+            //     item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
+
+            // }else{
+
+            //     const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //     item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+            //     item.density_H = 0;
+            //     item.data_remaining_fill_H = 0;
+            //     item.data_remaining_fill_total_H = 0;
+            //     item.Fill_between_day_H = 0;
+            //     item.data_Fill_H = 0;
+            //     item.Total_ALL_FT_101_H = 0;
+            //     item.Total_ALL_FT_201_H = 0;
+            //     item.chemical_between_day_H = 0;
+            //     item.ro_between_day_H = 0;
+            //     item.Total_ALL_FT_401_H = 0;
+            //     item.Total_ALL_FT_402_H = 0;
+            //     item.Total_ALL_FT_403_H = 0;
+            //     item.pd1_between_day_H = 0;
+            //     item.pd2_between_day_H = 0;
+            //     item.pd3_between_day_H = 0;
+            //     item.totalAll_use_between_day_H = 0;
+            // }
+
+            if(prevrows && nextrows){
 
                 // ส่งค่ากลับไปในแต่ละ nextrows เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
