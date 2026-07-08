@@ -1475,6 +1475,50 @@ export const reprotoverview = async (c) => {
                 // col S
                 item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
 
+            }else if(prevrows) {
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+                item.density_N = 0;
+                item.data_remaining_fill_N = 0;
+                item.data_remaining_fill_total_N = 0;
+                item.Fill_between_day_N = 0;
+                item.data_Fill_N = 0;
+                item.Total_ALL_FT_101_N = 0;
+                item.Total_ALL_FT_201_N = 0;
+                item.chemical_between_day_N = 0;
+                item.ro_between_day_N = 0;
+                item.Total_ALL_FT_401_N = 0;
+                item.Total_ALL_FT_402_N = 0;
+                item.Total_ALL_FT_403_N = 0;
+                item.pd1_between_day_N = 0;
+                item.pd2_between_day_N = 0;
+                item.pd3_between_day_N = 0;
+                item.totalAll_use_between_day_N = 0;
+
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+                item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+                // col M
+                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+                item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+                // col O
+                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+            
             }else{
 
                 item.data_remaining_tank_Mix_N = 0;
@@ -1840,6 +1884,51 @@ export const reprotoverview = async (c) => {
 
                 item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
 
+            }else if(prevrows){
+
+                const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+                item.density_H = 0;
+                item.data_remaining_fill_H = 0;
+                item.data_remaining_fill_total_H = 0;
+                item.Fill_between_day_H = 0;
+                item.data_Fill_H = 0;
+                item.Total_ALL_FT_101_H = 0;
+                item.Total_ALL_FT_201_H = 0;
+                item.chemical_between_day_H = 0;
+                item.ro_between_day_H = 0;
+                item.Total_ALL_FT_401_H = 0;
+                item.Total_ALL_FT_402_H = 0;
+                item.Total_ALL_FT_403_H = 0;
+                item.pd1_between_day_H = 0;
+                item.pd2_between_day_H = 0;
+                item.pd3_between_day_H = 0;
+
+                // col L
+                const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+                // nextrows.LT_PV_m3_LT_301_H = LT_PV_m3_LT_301;
+                const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+                item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
+
+                // col M
+                const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301H || 0;
+                const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+                item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+                // col N
+                const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+                const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+                // item.LT_PV_m3_LT_401_H = LT_PV_m3_LT_401;
+                item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                
+                // col O
+                const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401H || 0);
+                const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+                item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+            
             }else{
 
                 item.data_remaining_tank_Mix_H = 0;
@@ -2009,7 +2098,7 @@ export const reprotoverview = async (c) => {
             //     item.totalAll_use_between_day_H = 0;
             // }
 
-            if(prevrows && nextrows){
+            if(prevrows){
 
                 // ส่งค่ากลับไปในแต่ละ nextrows เพื่อนำไปบวกเพิ่มภายหลัง
                 return {
