@@ -1344,13 +1344,14 @@ export const reprotoverview = async (c) => {
                     item.data_fill = System_Data_Fill;
                 }
 
+            const System_Data_Density = densityNaOH;
+            const System_Data_Density_lastday = densityNaOH;
+
             if(prevrows && nextrows){
 
                 const System_Data_Fill = nextrows.Fill_Kg_N || 0;
                 // const System_Data_Density = nextrows.Density_N || 1;
-                const System_Data_Density = densityNaOH;
                 const System_Data_Fill_lastday = item.Fill_Kg_N || 0;
-                const System_Data_Density_lastday = densityNaOH;
                 
                 // const System_Data_Density_lastday = prevrows.Density_N || 1;
 
@@ -1480,15 +1481,7 @@ export const reprotoverview = async (c) => {
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
-                item.density_N = 0;
-                item.data_remaining_fill_N = 0;
-                item.data_remaining_fill_total_N = 0;
-                item.Fill_between_day_N = 0;
                 item.data_Fill_N = 0;
-                item.Total_ALL_FT_101_N = 0;
-                item.Total_ALL_FT_201_N = 0;
-                item.chemical_between_day_N = 0;
-                item.ro_between_day_N = 0;
                 item.Total_ALL_FT_401_N = 0;
                 item.Total_ALL_FT_402_N = 0;
                 item.Total_ALL_FT_403_N = 0;
@@ -1496,6 +1489,62 @@ export const reprotoverview = async (c) => {
                 item.pd2_between_day_N = 0;
                 item.pd3_between_day_N = 0;
                 item.totalAll_use_between_day_N = 0;
+
+
+
+                
+
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+                const LT_PV_m3_LT_101_lastday = prevrows.LT_PV_m3_LT_101N || 0;
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+                const LT_PV_m3_LT_102_lastday = prevrows.LT_PV_m3_LT_102N || 0;
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+
+                const System_Data_Fill_lastday = item.Fill_Kg_N || 0;
+
+                // col C
+                item.density_N = System_Data_Density;
+
+                // col D
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+                item.data_remaining_fill_N = data_remaining_fill;
+
+                // col E
+                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+                item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+                // col F
+                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+                item.Fill_between_day_N = Fill_between_day;
+
+                // col H
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+                item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+                // col I
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+                item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+                const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101N || 0);
+                const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201N || 0);
+
+                // col J
+                item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+                // col K
+                item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
                 // col L
                 const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
@@ -1518,6 +1567,8 @@ export const reprotoverview = async (c) => {
                 const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
 
                 item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                
             
             }else{
 
@@ -1741,14 +1792,15 @@ export const reprotoverview = async (c) => {
                 .orderBy('UnixTimestamp', 'desc')
                 .first(); // เอาแถวล่าสุดแถวเดียว
 
+            const System_Data_Density = densityHCI;
+            const System_Data_Density_lastday = densityHCI;
+
             if(prevrows && nextrows){
 
                 const System_Data_Fill = nextrows.Fill_Kg_H || 0;
                 // const System_Data_Density = nextrows.Density_H || 1;
-                const System_Data_Density = densityHCI;
                 const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
                 // const System_Data_Density_lastday = rows.Density_H || 1;
-                const System_Data_Density_lastday = densityHCI;
 
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
@@ -1809,9 +1861,6 @@ export const reprotoverview = async (c) => {
 
                 // col K
                 item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
-
-                // col A
-                item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
 
                 // col L
                 const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
@@ -1889,21 +1938,66 @@ export const reprotoverview = async (c) => {
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
-                item.density_H = 0;
-                item.data_remaining_fill_H = 0;
-                item.data_remaining_fill_total_H = 0;
-                item.Fill_between_day_H = 0;
                 item.data_Fill_H = 0;
-                item.Total_ALL_FT_101_H = 0;
-                item.Total_ALL_FT_201_H = 0;
-                item.chemical_between_day_H = 0;
-                item.ro_between_day_H = 0;
                 item.Total_ALL_FT_401_H = 0;
                 item.Total_ALL_FT_402_H = 0;
                 item.Total_ALL_FT_403_H = 0;
                 item.pd1_between_day_H = 0;
                 item.pd2_between_day_H = 0;
                 item.pd3_between_day_H = 0;
+
+                const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
+
+                const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+    
+                const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+                // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+                const LT_PV_m3_LT_101_lastday = prevrows.LT_PV_m3_LT_101H || 0;
+                const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+                // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+    
+                const LT_PV_m3_LT_102_lastday = prevrows.LT_PV_m3_LT_102H || 0;
+                const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+
+                // col C
+                item.density_H = System_Data_Density;
+
+                // col D
+                const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+                item.data_remaining_fill_H = data_remaining_fill;
+                
+
+                // col E
+                const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+                item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+                const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+                const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+                // col F
+                const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+                item.Fill_between_day_H = Fill_between_day;
+                
+                // col H
+                const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+                item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+                // col I
+                const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+                item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+                const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101H || 0);
+                const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201H || 0);
+
+                // col J
+                item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+                // col K
+                item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
 
                 // col L
                 const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;

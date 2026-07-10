@@ -86,7 +86,7 @@ async function convertToCSV(
     let tableRows = [] as any;
 
 
-    if (data.length === 0) {
+    if (data.length !== 0) {
         // return '';
         // 2. สร้างแถวข้อมูลตามลำดับของ headers
         // const dataRows = data.map(row => 

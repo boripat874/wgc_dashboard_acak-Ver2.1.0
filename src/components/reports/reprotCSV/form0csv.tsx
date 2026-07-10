@@ -98,7 +98,6 @@ async function convertToCSV(
     // const unit_value = await Unit(UnitName_);
     const unit_value = "kg";
 
-
     const HEADERS: { [key in keyof any]: string } = {
         dateTime: 'วันที่',
         menu_: 'รายการ' ,
@@ -133,7 +132,10 @@ async function convertToCSV(
 
     let tableRows = [] as any;
 
-    if (data.length === 0) {
+    console.log("datareponse result 333", data );
+    console.log("datareponse result length", data.length );
+
+    if (data.length !== 0) {
 
         // return '';
         data.forEach((item) => {
@@ -204,6 +206,8 @@ async function convertToCSV(
     //     // }).join(',')
     //     []
     // );
+
+    console.log("tableRows", tableRows );
 
     // 3. รวมหัวตารางและข้อมูลเข้าด้วยกัน
     return [`${reportName_},\nPeriod : ${period_},Time Start : ${date_start_== "--"?date_start_.replace(/-/g, '/'): date_start_},Time End : ${date_end_ == "--"?date_end_.replace(/-/g, '/'):date_end_}`,headerRow, ...tableRows].join('\n');
@@ -300,7 +304,7 @@ export default async function Forms1csv(
         period_ = datareponse.period_Display;
         start_timeDisplay = datareponse.start_timeDisplay;
         end_timeDisplay = datareponse.end_timeDisplay;
-        // console.log(data);
+        // console.log("datareponse result 111", data );
         return;
     })
     .catch((error) => {
@@ -315,6 +319,8 @@ export default async function Forms1csv(
     const unit_value = await Unit(unit);
 
     try{
+
+        console.log("datareponse result 222", data );
 
         const datatable = convertedData(data);
 

@@ -22,6 +22,7 @@ applyPlugin(jsPDF);
  
 interface Data {
   dateTime:string;
+  Count_mix: number;
   Total_ALL_FT_101: number;
   Total_ALL_FT_201: number;
   chemical_between_day: number;
@@ -76,6 +77,7 @@ function convertToCSV(
 
     const HEADERS: { [key in keyof Data]: string } = {
         dateTime: "วันที่",
+        Count_mix: "รอบการผสม (ครั้ง)",
         Total_ALL_FT_101: `ตัวเลขมิเตอร์ (${nameTank1}) ${plantName_} (${C2}%) (L)`,
         Total_ALL_FT_201: `ตัวเลขมิเตอร์ (${nameTank2}) นํ้า RO (L)`,
         chemical_between_day: `ผลต่างมิเตอร์ระหว่างวัน (${nameTank1}) ${plantName_} (${C2}%) (L)`,
@@ -93,13 +95,14 @@ function convertToCSV(
 
     let tableRows = [] as any;
 
-    if (data.length === 0) {
+    if (data.length !== 0) {
         // return '';
         data.forEach((item) => {
 
             tableRows.push([
 
                 item.dateTime, // วันที่
+                item.Count_mix,
                 item.Total_ALL_FT_101,
                 item.Total_ALL_FT_201,
                 item.chemical_between_day,
@@ -143,6 +146,7 @@ const convertedData = (originalData: Data[]) => {
         // NOTE: If you need to keep other properties, you must spread them: {...item, number: i, date_time: newDate}
         return { 
             dateTime: newDate,
+            Count_mix: item.Count_mix,
             Total_ALL_FT_101: item.Total_ALL_FT_101,
             Total_ALL_FT_201:  item.Total_ALL_FT_201,
             chemical_between_day:  item.chemical_between_day,
