@@ -1289,6 +1289,34 @@ export const reprotoverview = async (c) => {
 
             const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
+            const dayOfWeek = baseDate.getDay();
+
+            // console.log("Day of the week", dayOfWeek);
+
+            let prevdayofweekStartSec;
+            let prevdayofweekEndSec;
+
+            // if(dayOfWeek == 1){
+
+            //     // 1. หาวันเมื่อวาน (ถอยหลังไป 2 วัน) เริ่มต้นที่ 00:00:00
+            //     const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
+            //     prevStart.setDate(baseDate.getDate() - 2);
+            //     prevStart.setHours(0, 0, 0, 0);
+
+            //     // 2. หาวันสิ้นสุด (ถอยหลังไป 2 วัน) (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+            //     const prevEnd = new Date(baseDate);
+            //     prevEnd.setDate(baseDate.getDate() - 1);
+            //     prevEnd.setHours(0, 0, 0, 0);
+
+            //     // แปลงเป็น Seconds (Unix Timestamp)
+            //     prevdayofweekStartSec = Math.floor(prevStart.getTime() / 1000);
+            //     prevdayofweekEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+            // }
+
+            // console.log("prevdayofweekStartSec >>:", prevdayofweekStartSec);
+            // console.log("prevdayofweekEndSec >>:", prevdayofweekEndSec);
+
             // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
             const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
             prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
@@ -1330,24 +1358,355 @@ export const reprotoverview = async (c) => {
             .orderBy('UnixTimestamp', 'desc')
             .first(); // เอาแถวล่าสุดแถวเดียว
 
-            if(nextrows){
+            // if(nextrows){
 
-                    // const System_Data_Density = densityNaOH;
-                    const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
-                    
-                    //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
-                    item.data_fill = System_Data_Fill_nextday;
+            //     // const System_Data_Density = densityNaOH;
+            //     const System_Data_Fill_nextday = nextrows.Fill_Kg_N || 0;
+                
+            //     //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+            //     item.data_fill = System_Data_Fill_nextday;
 
-                }else{
-                    const System_Data_Fill = 0;
+            // }else{
+            //     const System_Data_Fill = 0;
 
-                    item.data_fill = System_Data_Fill;
-                }
+            //     item.data_fill = System_Data_Fill;
+            // }
 
             const System_Data_Density = densityNaOH;
             const System_Data_Density_lastday = densityNaOH;
 
+            // if(dayOfWeek == 1){
+
+            //     // Query ข้อมูลจากตาราง ScadaDataLogAlkaline วันก่อน
+            //     const prevdayofweek = await db('ScadaDataLogAlkaline')
+            //         .select("*")
+            //         .where('UnixTimestamp', '>=', prevdayofweekStartSec)
+            //         .where('UnixTimestamp', '<=', prevdayofweekEndSec)
+            //         .orderBy('UnixTimestamp', 'desc')
+            //         .first(); // เอาแถวล่าสุดแถวเดียว
+
+            //     // console.log("prevdayofweek >>:", prevdayofweek);
+
+            //     if(prevdayofweek && prevrows && nextrows){
+
+            //         item.condition_N = 1;
+
+            //         const System_Data_Fill = nextrows.Fill_Kg_N || 0;
+            //         const System_Data_Fill_lastday = prevrows.Fill_Kg_N || 0; // ข้อมูล Fill ของวันเสาร์ จะเก็บวันอาทิตย์
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         // col A
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //         const LT_PV_m3_LT_101_lastday = prevdayofweek.LT_PV_m3_LT_101N || 0;
+            //         const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+        
+            //         const LT_PV_m3_LT_102_lastday = prevdayofweek.LT_PV_m3_LT_102N || 0;
+            //         const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+        
+            //         // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+
+            //         // col C
+            //         item.density_N = System_Data_Density;
+                    
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_N = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+            //         const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+            //         const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+            //         // console.log("System_Data_Fill_lastday >>", System_Data_Fill_lastday);
+            //         // console.log("data_remaining_fill_lastday >>", data_remaining_fill_lastday);
+
+            //         // col F
+            //         const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+            //         item.Fill_between_day_N = Fill_between_day;
+
+            //         // col G
+            //         item.data_Fill_N =  System_Data_Fill;
+
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+            //         item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+            //         item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101N || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201N || 0);
+
+            //         // col J
+            //         item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+            //         item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+            //         item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            //         // col Q (PD1)
+            //         const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
+                    
+            //         item.Total_ALL_FT_401_N = Total_ALL_FT_401;
+                    
+            //         // col Q (PD2)
+            //         const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+
+            //         item.Total_ALL_FT_402_N = Total_ALL_FT_402;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+
+            //         item.Total_ALL_FT_403_N = Total_ALL_FT_403;
+
+            //         // col R (PD1)
+            //         const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401N || 0);
+            //         const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
+            //         item.pd1_between_day_N = pd1_between_day;
+                    
+            //         // col R (PD2)
+            //         const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402N || 0);
+            //         const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+            //         item.pd2_between_day_N = pd2_between_day;
+
+            //         // col R (PD3)
+            //         const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403N || 0);
+            //         const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //         item.pd3_between_day_N = pd3_between_day;
+
+            //         // col S
+            //         item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+            //     }else if(prevrows && nextrows){
+
+            //         item.condition_N = 2;
+                
+            //         const System_Data_Fill = nextrows.Fill_Kg_N || 0;
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         // col A
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+        
+            //         // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //         // col C
+            //         item.density_N = System_Data_Density;
+                    
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_N = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+            //         // col F
+            //         item.Fill_between_day_N = 0;
+
+            //         // col G
+            //         item.data_Fill_N =  System_Data_Fill;
+
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+            //         item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+            //         item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101N || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201N || 0);
+
+            //         // col J
+            //         item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+            //         item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+            //         item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            //         // col Q (PD1)
+            //         const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
+                    
+            //         item.Total_ALL_FT_401_N = Total_ALL_FT_401;
+                    
+            //         // col Q (PD2)
+            //         const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+
+            //         item.Total_ALL_FT_402_N = Total_ALL_FT_402;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+
+            //         item.Total_ALL_FT_403_N = Total_ALL_FT_403;
+
+            //         // col R (PD1)
+            //         const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401N || 0);
+            //         const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
+            //         item.pd1_between_day_N = pd1_between_day;
+                    
+            //         // col R (PD2)
+            //         const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402N || 0);
+            //         const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+            //         item.pd2_between_day_N = pd2_between_day;
+
+            //         // col R (PD3)
+            //         const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403N || 0);
+            //         const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //         item.pd3_between_day_N = pd3_between_day;
+
+            //         // col S
+            //         item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+            //     }else if(prevrows){
+
+            //         item.condition_N = 3;
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         item.data_Fill_N = 0;
+            //         item.Fill_between_day_N = 0;
+            //         item.Total_ALL_FT_401_N = 0;
+            //         item.Total_ALL_FT_402_N = 0;
+            //         item.Total_ALL_FT_403_N = 0;
+            //         item.pd1_between_day_N = 0;
+            //         item.pd2_between_day_N = 0;
+            //         item.pd3_between_day_N = 0;
+            //         item.totalAll_use_between_day_N = 0;
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102N || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //         // col C
+            //         item.density_N = System_Data_Density;
+
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_N = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_N = data_remaining_fill_total;
+
+            //         // col F
+            //         item.Fill_between_day_N = 0;
+
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101N || 0);
+            //         item.Total_ALL_FT_101_N = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201N || 0);
+            //         item.Total_ALL_FT_201_N = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101N || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201N || 0);
+
+            //         // col J
+            //         item.chemical_between_day_N = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_N = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.3) * 1000;
+            //         item.data_remaining_tank_Mix_N = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301N || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.3) * 1000;
+
+            //         item.tank_Mix_between_day_N = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         item.data_remaining_tank_Store_N = data_remaining_tank_Store;
+
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401N || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+            //     }
+
+            // }else 
+                
             if(prevrows && nextrows){
+
+                item.condition_N = 4;
 
                 const System_Data_Fill = nextrows.Fill_Kg_N || 0;
                 // const System_Data_Density = nextrows.Density_N || 1;
@@ -1357,7 +1716,6 @@ export const reprotoverview = async (c) => {
 
                 // const C1_N = 4;
                 // const C2_N = 50;
-
                 // const C1_H = 6;
                 // const C2_H = 35;
 
@@ -1478,21 +1836,12 @@ export const reprotoverview = async (c) => {
 
             }else if(prevrows) {
 
+                item.condition_N = 5;
+
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
                 item.data_Fill_N = 0;
-                item.Total_ALL_FT_401_N = 0;
-                item.Total_ALL_FT_402_N = 0;
-                item.Total_ALL_FT_403_N = 0;
-                item.pd1_between_day_N = 0;
-                item.pd2_between_day_N = 0;
-                item.pd3_between_day_N = 0;
-                item.totalAll_use_between_day_N = 0;
-
-
-
-                
 
                 const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101N || 0;
                 const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
@@ -1568,18 +1917,54 @@ export const reprotoverview = async (c) => {
 
                 item.tank_Store_between_day_N = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
 
+                // col Q (PD1)
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401N || 0);
                 
-            
+                item.Total_ALL_FT_401_N = Total_ALL_FT_401;
+                
+                // col Q (PD2)
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402N || 0);
+
+                item.Total_ALL_FT_402_N = Total_ALL_FT_402;
+
+                // col Q (PD3)
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403N || 0);
+
+                item.Total_ALL_FT_403_N = Total_ALL_FT_403;
+
+                // col R (PD1)
+                const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401N || 0);
+                const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday);
+                item.pd1_between_day_N = pd1_between_day;
+                
+                // col R (PD2)
+                const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402N || 0);
+                const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+                item.pd2_between_day_N = pd2_between_day;
+
+                // col R (PD3)
+                const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403N || 0);
+                const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+                item.pd3_between_day_N = pd3_between_day;
+
+                // col S
+                item.totalAll_use_between_day_N = (pd1_between_day + pd2_between_day + pd3_between_day);
+
             }else{
+
+                item.condition_N = 6;
 
                 item.data_remaining_tank_Mix_N = 0;
                 item.tank_Mix_between_day_N = 0;
                 item.data_remaining_tank_Store_N = 0;
                 item.tank_Store_between_day_N = 0;
 
+                // conlog("item.UnixTimestamp >>", item.UnixTimestamp);
+
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
                 item.density_N = 0;
                 item.data_remaining_fill_N = 0;
                 item.data_remaining_fill_total_N = 0;
@@ -1598,6 +1983,10 @@ export const reprotoverview = async (c) => {
                 item.totalAll_use_between_day_N = 0;
 
             }
+
+            // if(dayOfWeek == 0){
+            //     item.Fill_between_day_N = 0;
+            // }
 
             // if (nextrows) {
 
@@ -1751,6 +2140,33 @@ export const reprotoverview = async (c) => {
 
             const baseDate = new Date(item.UnixTimestamp * 1000); // แปลง Unix Timestamp เป็น Date Object
 
+            const dayOfWeek = baseDate.getDay();
+
+            item.dayOfWeek = dayOfWeek;
+
+            // console.log("Day of the week", dayOfWeek);
+            let prevdayofweekStartSec;
+            let prevdayofweekEndSec;
+
+
+            // if(dayOfWeek == 1){
+
+            //     // 1. หาวันเมื่อวาน (ถอยหลังไป 2 วัน) เริ่มต้นที่ 00:00:00
+            //     const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
+            //     prevStart.setDate(baseDate.getDate() - 2);
+            //     prevStart.setHours(0, 0, 0, 0);
+
+            //     // 2. หาวันสิ้นสุด (ถอยหลังไป 2 วัน) (ก็คือจุดเริ่มต้นของวัน baseDate ที่ 00:00:00)
+            //     const prevEnd = new Date(baseDate);
+            //     prevEnd.setDate(baseDate.getDate() - 1);
+            //     prevEnd.setHours(0, 0, 0, 0);
+
+            //     // แปลงเป็น Seconds (Unix Timestamp)
+            //     prevdayofweekStartSec = Math.floor(prevStart.getTime() / 1000);
+            //     prevdayofweekEndSec = Math.floor(prevEnd.getTime() / 1000);
+
+            // }
+
             // 1. หาวันเมื่อวาน (ถอยหลังไป 1 วัน) เริ่มต้นที่ 00:00:00
             const prevStart = new Date(baseDate); // แปลง Unix Timestamp เป็น Date Object
             prevStart.setDate(baseDate.getDate() - 1); // เปลี่ยนจาก +1 เป็น -1
@@ -1792,10 +2208,386 @@ export const reprotoverview = async (c) => {
                 .orderBy('UnixTimestamp', 'desc')
                 .first(); // เอาแถวล่าสุดแถวเดียว
 
+            // if(nextrows){
+
+            //     // const System_Data_Density = densityNaOH;
+            //     const System_Data_Fill_nextday = nextrows.Fill_Kg_H || 0;
+                
+            //     //=== Total NaOH Fill today (แปลงเป็น kg โดยคูณด้วยความหนาแน่น)
+            //     item.data_fill = System_Data_Fill_nextday;
+
+            // }else{
+            //     const System_Data_Fill = 0;
+
+            //     item.data_fill = System_Data_Fill;
+            // }
+
             const System_Data_Density = densityHCI;
             const System_Data_Density_lastday = densityHCI;
 
+            // console.log("Day of the week", dayOfWeek);
+
+            // if(dayOfWeek == 1){
+
+            //     // Query ข้อมูลจากตาราง ScadaDataLogAcid วันก่อน
+            //     const prevdayofweek = await db('ScadaDataLogAcid')
+            //         .select("*")
+            //         .where('UnixTimestamp', '>=', prevdayofweekStartSec)
+            //         .where('UnixTimestamp', '<=', prevdayofweekEndSec)
+            //         .orderBy('UnixTimestamp', 'desc')
+            //         .first(); // เอาแถวล่าสุดแถวเดียว
+
+            //     if(prevdayofweek && prevrows && nextrows){
+
+            //         item.condition_H = 1;
+
+            //         const System_Data_Fill = nextrows.Fill_Kg_H || 0;
+            //         // const System_Data_Density = nextrows.Density_H || 1;
+            //         const System_Data_Fill_lastday = prevrows.Fill_Kg_H || 0; // ข้อมูล Fill ของวันเสาร์ จะเก็บวันอาทิตย์
+            //         // const System_Data_Density_lastday = rows.Density_H || 1;
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         // col A
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //         const LT_PV_m3_LT_101_lastday = prevdayofweek.LT_PV_m3_LT_101H || 0;
+            //         const data_remaining_tank1_fill_lastday = (LT_PV_m3_LT_101_lastday + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total_lastday = (data_remaining_tank1_fill_lastday * System_Data_Density_lastday);
+        
+            //         const LT_PV_m3_LT_102_lastday = prevdayofweek.LT_PV_m3_LT_102H || 0;
+            //         const data_remaining_tank2_fill_lastday = (LT_PV_m3_LT_102_lastday + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total_lastday = (data_remaining_tank2_fill_lastday * System_Data_Density_lastday);
+        
+            //         // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //         // col C
+            //         item.density_H = System_Data_Density;
+
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_H = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+            //         const data_remaining_fill_lastday =  (data_remaining_tank1_fill_lastday + data_remaining_tank2_fill_lastday);
+            //         const data_remaining_fill_total_lastday = data_remaining_fill_lastday * System_Data_Density_lastday;
+
+            //         // console.log("System_Data_Fill_lastday >>", System_Data_Fill_lastday);
+            //         // console.log("data_remaining_fill_lastday >>", data_remaining_fill_lastday);
+            //         // console.log("data_remaining_fill_total >>", data_remaining_fill_total);
+
+            //         // col F
+            //         const Fill_between_day = (data_remaining_fill_total_lastday + System_Data_Fill_lastday) - data_remaining_fill_total;
+            //         item.Fill_between_day_H = Fill_between_day;
+
+            //         // col G
+            //         item.data_Fill_H =  System_Data_Fill;
+                    
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+            //         item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+            //         item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101H || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201H || 0);
+
+            //         // col J
+            //         item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+            //         // nextrows.LT_PV_m3_LT_301_H = LT_PV_m3_LT_301;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+            //         item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301H || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+            //         item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         // item.LT_PV_m3_LT_401_H = LT_PV_m3_LT_401;
+            //         item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                    
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            //         // col Q (PD1)
+            //         const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+                    
+            //         item.Total_ALL_FT_401_H = Total_ALL_FT_401;
+                    
+            //         // col Q (PD2)
+            //         const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+
+            //         item.Total_ALL_FT_402_H = Total_ALL_FT_402;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+
+            //         item.Total_ALL_FT_403_H = Total_ALL_FT_403;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
+
+            //         item.Total_ALL_FT_501_H = Total_ALL_FT_501;
+
+            //         // col R (PD1)
+            //         const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401H || 0);
+            //         const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
+
+            //         item.pd1_between_day_H = pd1_between_day;
+                    
+            //         // col R (PD2)
+            //         const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402H || 0);
+            //         const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+
+            //         item.pd2_between_day_H = pd2_between_day;
+
+            //         // col R (PD3)
+            //         const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403H || 0);
+            //         const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //         item.pd3_between_day_H = pd3_between_day;
+
+            //         // col R (ES)
+            //         const Total_ALL_FT_501_lastday = (prevrows.Aka_Total_ALL_FT_501H || 0);
+            //         const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
+            //         item.es_between_day_H = es_between_day;
+
+            //         // col S
+            //         item.total_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+            //         item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
+
+            //     }else if( prevrows && nextrows){
+
+            //         item.condition_H = 2;
+
+            //         const System_Data_Fill = nextrows.Fill_Kg_H || 0;
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         // col A
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+            //         // const data_remaining_tank1_fill_total = (data_remaining_tank1_fill * System_Data_Density);
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+            //         // const data_remaining_tank2_fill_total = (data_remaining_tank2_fill * System_Data_Density);
+
+            //         // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //         // col C
+            //         item.density_H = System_Data_Density;
+
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_H = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_H = data_remaining_fill_total;
+
+            //         // col F
+            //         item.Fill_between_day_H = 0;
+
+            //         // col G
+            //         item.data_Fill_H =  System_Data_Fill;
+                    
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+            //         item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+            //         item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101H || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201H || 0);
+
+            //         // col J
+            //         item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+            //         item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301H || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+            //         item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                    
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            //         // col Q (PD1)
+            //         const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+                    
+            //         item.Total_ALL_FT_401_H = Total_ALL_FT_401;
+                    
+            //         // col Q (PD2)
+            //         const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+
+            //         item.Total_ALL_FT_402_H = Total_ALL_FT_402;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+
+            //         item.Total_ALL_FT_403_H = Total_ALL_FT_403;
+
+            //         // col Q (PD3)
+            //         const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
+
+            //         item.Total_ALL_FT_501_H = Total_ALL_FT_501;
+
+            //         // col R (PD1)
+            //         const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401H || 0);
+            //         const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
+
+            //         item.pd1_between_day_H = pd1_between_day;
+                    
+            //         // col R (PD2)
+            //         const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402H || 0);
+            //         const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+
+            //         item.pd2_between_day_H = pd2_between_day;
+
+            //         // col R (PD3)
+            //         const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403H || 0);
+            //         const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+            //         item.pd3_between_day_H = pd3_between_day;
+
+            //         // col R (ES)
+            //         const Total_ALL_FT_501_lastday = (prevrows.Aka_Total_ALL_FT_501H || 0);
+            //         const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
+            //         item.es_between_day_H = es_between_day;
+
+            //         // col S
+            //         item.total_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+            //         item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
+                
+            //     }else if(prevrows){
+
+            //         item.condition_H = 3;
+
+            //         const Timestamp_data = new Date(item.UnixTimestamp * 1000);
+
+            //         // col A
+            //         item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
+
+            //         item.data_Fill_H =  0;
+            //         item.Fill_between_day_H = 0;
+            //         item.total_use_between_day_H = 0;
+            //         item.Total_ALL_FT_401_H = 0;
+            //         item.Total_ALL_FT_402_H = 0;
+            //         item.Total_ALL_FT_403_H = 0;
+            //         item.pd1_between_day_H = 0;
+            //         item.pd2_between_day_H = 0;
+            //         item.pd3_between_day_H = 0;
+            //         item.totalAll_use_between_day_H = 0;
+
+            //         const LT_PV_m3_LT_101 = item.LT_PV_m3_LT_101H || 0;
+            //         const data_remaining_tank1_fill = (LT_PV_m3_LT_101 + 0.8) * 1000;
+        
+            //         const LT_PV_m3_LT_102 = item.LT_PV_m3_LT_102H || 0;
+            //         const data_remaining_tank2_fill = (LT_PV_m3_LT_102 + 0.8) * 1000;
+
+            //         // console.log("data_remaining_tank1_fill_total >>", data_remaining     
+            //         // col C
+            //         item.density_H = System_Data_Density;
+
+            //         // col D
+            //         const data_remaining_fill = (data_remaining_tank1_fill + data_remaining_tank2_fill);
+            //         item.data_remaining_fill_H = data_remaining_fill;
+
+            //         // col E
+            //         const data_remaining_fill_total = data_remaining_fill * System_Data_Density;
+            //         item.data_remaining_fill_total_H = data_remaining_fill_total;
+                    
+            //         // col H
+            //         const Total_ALL_FT_101 = (item.Aka_Total_ALL_FT_101H || 0);
+            //         item.Total_ALL_FT_101_H = Total_ALL_FT_101;
+
+            //         // col I
+            //         const Total_ALL_FT_201 = (item.Aka_Total_ALL_FT_201H || 0);
+            //         item.Total_ALL_FT_201_H = Total_ALL_FT_201;
+
+            //         const Total_ALL_FT_101_lastday = (prevrows.Aka_Total_ALL_FT_101H || 0);
+            //         const Total_ALL_FT_201_lastday = (prevrows.Aka_Total_ALL_FT_201H || 0);
+
+            //         // col J
+            //         item.chemical_between_day_H = (Total_ALL_FT_101 - Total_ALL_FT_101_lastday);
+
+            //         // col K
+            //         item.ro_between_day_H = (Total_ALL_FT_201 - Total_ALL_FT_201_lastday);
+
+            //         // col L
+            //         const LT_PV_m3_LT_301 = item.LT_PV_m3_LT_301H || 0;
+            //         const data_remaining_tank_Mix = (LT_PV_m3_LT_301 + 0.8) * 1000;
+            //         item.data_remaining_tank_Mix_H = data_remaining_tank_Mix;
+
+            //         // col M
+            //         const LT_PV_m3_LT_301_lastday = prevrows.LT_PV_m3_LT_301H || 0;
+            //         const data_remaining_tank_Mix_lastday = (LT_PV_m3_LT_301_lastday + 0.8) * 1000;
+
+            //         item.tank_Mix_between_day_H = (data_remaining_tank_Mix - data_remaining_tank_Mix_lastday);
+
+            //         // col N
+            //         const LT_PV_m3_LT_401 = (item.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store = (LT_PV_m3_LT_401 + 1.3) * 1000;
+            //         item.data_remaining_tank_Store_H = data_remaining_tank_Store;
+                    
+            //         // col O
+            //         const LT_PV_m3_LT_401_lastday = (prevrows.LT_PV_m3_LT_401H || 0);
+            //         const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
+
+            //         item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+            //     }
+
+            // }else 
+                
             if(prevrows && nextrows){
+
+                item.condition_H = 4;
 
                 const System_Data_Fill = nextrows.Fill_Kg_H || 0;
                 // const System_Data_Density = nextrows.Density_H || 1;
@@ -1935,16 +2727,12 @@ export const reprotoverview = async (c) => {
 
             }else if(prevrows){
 
+                item.condition_H = 5;
+
                 const Timestamp_data = new Date(item.UnixTimestamp * 1000);
 
                 item.dateTime = format(Timestamp_data, 'yyyy-MM-dd');
                 item.data_Fill_H = 0;
-                item.Total_ALL_FT_401_H = 0;
-                item.Total_ALL_FT_402_H = 0;
-                item.Total_ALL_FT_403_H = 0;
-                item.pd1_between_day_H = 0;
-                item.pd2_between_day_H = 0;
-                item.pd3_between_day_H = 0;
 
                 const System_Data_Fill_lastday = item.Fill_Kg_H || 0;
 
@@ -2022,8 +2810,57 @@ export const reprotoverview = async (c) => {
                 const data_remaining_tank_Store_lastday = (LT_PV_m3_LT_401_lastday + 1.3) * 1000;
 
                 item.tank_Store_between_day_H = (data_remaining_tank_Store - data_remaining_tank_Store_lastday);
+
+                // col Q (PD1)
+                const Total_ALL_FT_401 = (item.Aka_Total_ALL_FT_401H || 0);
+                
+                item.Total_ALL_FT_401_H = Total_ALL_FT_401;
+                
+                // col Q (PD2)
+                const Total_ALL_FT_402 = (item.Aka_Total_ALL_FT_402H || 0);
+
+                item.Total_ALL_FT_402_H = Total_ALL_FT_402;
+
+                // col Q (PD3)
+                const Total_ALL_FT_403 = (item.Aka_Total_ALL_FT_403H || 0);
+
+                item.Total_ALL_FT_403_H = Total_ALL_FT_403;
+
+                // col Q (PD3)
+                const Total_ALL_FT_501 = (item.Aka_Total_ALL_FT_501H || 0);
+
+                item.Total_ALL_FT_501_H = Total_ALL_FT_501;
+
+                // col R (PD1)
+                const Total_ALL_FT_401_lastday = (prevrows.Aka_Total_ALL_FT_401H || 0);
+                const pd1_between_day = (Total_ALL_FT_401 - Total_ALL_FT_401_lastday)
+
+                item.pd1_between_day_H = pd1_between_day;
+                
+                // col R (PD2)
+                const Total_ALL_FT_402_lastday = (prevrows.Aka_Total_ALL_FT_402H || 0);
+                const pd2_between_day = (Total_ALL_FT_402 - Total_ALL_FT_402_lastday);
+
+                item.pd2_between_day_H = pd2_between_day;
+
+                // col R (PD3)
+                const Total_ALL_FT_403_lastday = (prevrows.Aka_Total_ALL_FT_403H || 0);
+                const pd3_between_day = (Total_ALL_FT_403 - Total_ALL_FT_403_lastday);
+                item.pd3_between_day_H = pd3_between_day;
+
+                // col R (ES)
+                const Total_ALL_FT_501_lastday = (prevrows.Aka_Total_ALL_FT_501H || 0);
+                const es_between_day = (Total_ALL_FT_501 - Total_ALL_FT_501_lastday);
+                item.es_between_day_H = es_between_day;
+
+                // col S
+                item.total_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day);
+
+                item.totalAll_use_between_day_H = (pd1_between_day + pd2_between_day + pd3_between_day + es_between_day);
             
             }else{
+
+                item.condition_H = 6;
 
                 item.data_remaining_tank_Mix_H = 0;
                 item.tank_Mix_between_day_H = 0;
@@ -2050,6 +2887,11 @@ export const reprotoverview = async (c) => {
                 item.pd3_between_day_H = 0;
 
             }
+
+
+            // if(dayOfWeek == 0){
+            //     item.Fill_between_day_H = 0;
+            // }
 
             // if (nextrows) {
 

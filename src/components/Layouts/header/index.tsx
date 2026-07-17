@@ -78,7 +78,7 @@ export function Header() {
         <p className="text-body-sm font-medium text-dark dark:text-gray-4">
           {formattedDate}
         </p>
-        <p className="text-heading-6 font-bold text-primary dark:text-white">
+        <p suppressHydrationWarning className="text-heading-6 font-bold text-primary dark:text-white">
           เวลา {formattedTime} น.
         </p>
       </div>
